@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Faculty Dashboard — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mt-3 mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="mb-0">Welcome, {{ faculty.name }}</h3>
+    <p class="text-muted mb-0">{{ faculty.department or 'Faculty' }}{% if faculty.expertise %} &middot; {{ faculty.expertise }}{% endif %}</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{{ url_for('faculty_slots') }}" class="btn sb-btn-primary"><i class="bi bi-calendar2-plus"></i> Add a Slot</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-lg-3">
+    <div class="sb-card text-center">
+      <div class="h3 mb-0">{{ upcoming|length }}</div>
+      <div class="text-muted small">Upcoming Classes</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="sb-card text-center">
+      <div class="h3 mb-0">{{ open_slot_count }}</div>
+      <div class="text-muted small">Open Slots</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="sb-card text-center">
+      <div class="h3 mb-0">{{ mentee_count }}</div>
+      <div class="text-muted small">Students Mentored</div>
+    </div>
+  </div>
+  <div class="col-sm-6 col-lg-3">
+    <div class="sb-card text-center">
+      <div class="h3 mb-0">{{ pending_request_count }}</div>
+      <div class="text-muted small">Pending Requests</div>
+      {% if pending_request_count %}<a href="{{ url_for('faculty_slots') }}" class="small">Review &rarr;</a>{% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Upcoming Classes</h5>
+      {% if upcoming %}
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr><th>Date</th><th>Time</th><th>Student</th><th>Course</th><th>Topic</th><th>Link</th></tr>
+            </thead>
+            <tbody>
+              {% for a in upcoming %}
+                <tr>
+                  <td>{{ a.slot_date | fmt_date }}</td>
+                  <td>{{ a.start_time }} &ndash; {{ a.end_time }}</td>
+                  <td>{{ a.student_name }}</td>
+                  <td>{{ a.student_course or '—' }}</td>
+                  <td>{{ a.topic or '—' }}</td>
+                  <td>{% if a.meeting_link %}<a href="{{ a.meeting_link }}" target="_blank"><i class="bi bi-camera-video-fill"></i></a>{% else %}—{% endif %}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No classes booked yet. Add a few open slots and students at your college will be able to book them from Skill Enhancement.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="sb-card h-100">
+      <h5 class="mb-3"><i class="bi bi-megaphone-fill"></i> Notify Students</h5>
+      {% if upcoming %}
+        <form method="POST" action="{{ url_for('faculty_notify') }}">
+          <div class="mb-2">
+            <label class="form-label small">Send to</label>
+            <select name="target" class="form-select form-select-sm">
+              <option value="mentees">All students who've booked with me</option>
+              {% for c in upcoming_classes %}
+                <option value="{{ c.id }}">Only: {{ c.slot_date | fmt_date }} {{ c.start_time }}{% if c.topic %} &middot; {{ c.topic }}{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <input type="text" name="title" class="form-control form-control-sm" placeholder="Title" required>
+          </div>
+          <div class="mb-2">
+            <textarea name="message" class="form-control form-control-sm" rows="3" placeholder="e.g. Class moved to 5pm, same link." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-sm sb-btn-primary w-100"><i class="bi bi-send-fill"></i> Send</button>
+        </form>
+      {% else %}
+        <p class="text-muted small mb-0">Once a student books a class with you, you can send them updates from here.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

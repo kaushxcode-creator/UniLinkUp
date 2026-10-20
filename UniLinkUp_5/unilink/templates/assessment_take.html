@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}{{ mode|capitalize }} Assessment — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 mb-1">
+  <h3 class="text-capitalize mb-0">{{ mode }} Assessment</h3>
+  <span class="badge sb-badge-closed fs-6" id="sbAssessmentTimer" style="padding: 0.5rem 0.9rem;">
+    <i class="bi bi-stopwatch-fill"></i> <span id="sbAssessmentTimerText">--:--</span>
+  </span>
+</div>
+<p class="text-muted mb-4">Answer all questions, then submit to see your score. You get 90 seconds per question —
+  the timer applies here too, and the assessment auto-submits when time runs out.</p>
+
+<form method="POST" action="{{ url_for('submit_assessment') }}" id="sbAssessmentForm">
+  {% for q in questions %}
+    <div class="card sb-question-card mb-3 p-3">
+      <p class="fw-semibold mb-3">{{ loop.index }}. {{ q.question_text }}</p>
+      {% for opt_letter, opt_text in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+        <div class="form-check mb-1">
+          <input class="form-check-input" type="radio" name="q{{ q.id }}" id="q{{ q.id }}{{ opt_letter }}" value="{{ opt_letter }}" required>
+          <label class="form-check-label" for="q{{ q.id }}{{ opt_letter }}">{{ opt_letter }}. {{ opt_text }}</label>
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <button type="submit" class="btn sb-btn-primary btn-lg w-100 mt-2">Finish & See Score</button>
+</form>
+
+<script>
+(function () {
+  var SECONDS_PER_QUESTION = 90;
+  var totalSeconds = {{ questions|length }} * SECONDS_PER_QUESTION;
+  var display = document.getElementById('sbAssessmentTimerText');
+  var badge = document.getElementById('sbAssessmentTimer');
+  var form = document.getElementById('sbAssessmentForm');
+  var submitted = false;
+
+  function render() {
+    var m = Math.floor(totalSeconds / 60);
+    var s = totalSeconds % 60;
+    display.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    if (totalSeconds <= 30) {
+      badge.style.background = 'var(--sb-red)';
+      badge.classList.remove('sb-badge-closed');
+    }
+  }
+
+  render();
+  var timerId = setInterval(function () {
+    totalSeconds -= 1;
+    if (totalSeconds <= 0) {
+      totalSeconds = 0;
+      render();
+      clearInterval(timerId);
+      if (!submitted) {
+        submitted = true;
+        // Skip the browser's "please fill this required field" blocking on
+        // unanswered questions — time's up means submit whatever is filled.
+        Array.prototype.forEach.call(form.querySelectorAll('[required]'), function (el) {
+          el.removeAttribute('required');
+        });
+        form.submit();
+      }
+      return;
+    }
+    render();
+  }, 1000);
+
+  form.addEventListener('submit', function () { submitted = true; });
+})();
+</script>
+
+{% endblock %}

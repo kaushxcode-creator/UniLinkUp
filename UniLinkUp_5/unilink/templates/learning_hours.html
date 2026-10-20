@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Learning Hours — UniLinkUp{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('profile') }}" class="small d-inline-block mt-3 mb-1"><i class="bi bi-arrow-left"></i> Back to Profile</a>
+<h3 class="mb-1">Learning Hours</h3>
+<p class="text-muted mb-4">A private log just for you — no one else on UniLinkUp can see this page.</p>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="sb-card text-center">
+      <div class="h3 mb-0">{{ total_hours }}</div>
+      <div class="text-muted small">Total Hours Logged</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="sb-card text-center">
+      <div class="h3 mb-0">{{ this_week_hours }}</div>
+      <div class="text-muted small">Last 7 Days</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="sb-card">
+      <h5 class="mb-3">Log Study Time</h5>
+      <form method="POST">
+        <div class="mb-2">
+          <label class="form-label small">What did you study?</label>
+          <input type="text" name="activity" class="form-control" placeholder="e.g. DSA practice, mock interview prep" required>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small">Hours</label>
+            <input type="number" name="hours" class="form-control" step="0.25" min="0.25" max="24" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Date</label>
+            <input type="date" name="log_date" class="form-control" value="{{ today }}" max="{{ today }}">
+          </div>
+        </div>
+        <div class="mt-2 mb-3">
+          <label class="form-label small">Notes <span class="text-muted fw-normal">(optional)</span></label>
+          <input type="text" name="notes" class="form-control" placeholder="Anything you want to remember">
+        </div>
+        <button type="submit" class="btn sb-btn-primary w-100"><i class="bi bi-plus-lg"></i> Add Entry</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="sb-card">
+      <h5 class="mb-3">Your Log</h5>
+      {% if logs %}
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead><tr><th>Date</th><th>Activity</th><th>Hours</th><th>Notes</th></tr></thead>
+            <tbody>
+              {% for l in logs %}
+                <tr>
+                  <td>{{ l.log_date | fmt_date }}</td>
+                  <td>{{ l.activity }}</td>
+                  <td>{{ l.hours }}</td>
+                  <td class="text-muted small">{{ l.notes or '—' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No entries yet — log your first study session on the left.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

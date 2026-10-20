@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}{{ s.round_name }} — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-page-head">
+  <div>
+    <a href="{{ url_for('interviewer_campus') }}" class="small text-muted"><i class="bi bi-arrow-left"></i> Campus Interviews</a>
+    <h3 class="mt-1">{{ s.round_name }} · {{ s.job_title }}</h3>
+    <p>{{ s.interview_date | fmt_date('%A, %d %b %Y') }}{% if s.start_time %} · {{ s.start_time }}{% endif %} · {{ s.mode }}{% if s.venue %} · {{ s.venue }}{% endif %}</p>
+  </div>
+  <div class="text-end">
+    <span class="sb-blind-tag"><i class="bi bi-eye-slash-fill"></i> Blind mode</span>
+    {% if required %}<div class="small text-muted mt-1">Required skills are highlighted <span class="sb-skill is-match"><i class="bi bi-check2"></i> like this</span></div>{% endif %}
+  </div>
+</div>
+
+<div class="row g-4">
+  {% for p in candidates %}
+  <div class="col-lg-6">
+    <div class="sb-card h-100" data-scroll="up" style="--d:{{ [loop.index0, 6]|min * 0.05 }}s">
+      {% include '_blind_profile.html' %}
+      {% set r = done.get(p.id) %}
+      {% if r %}
+        <div class="mt-3 d-flex justify-content-between align-items-center">
+          <span class="sb-status s-{{ r.result|lower|replace(' ', '-') }}">{{ r.result }}</span>
+          <small class="text-muted">Evaluated</small>
+        </div>
+        {% if r.rejection_reason %}<div class="small mt-1"><strong class="text-danger">Reason:</strong> {{ r.rejection_reason }}</div>{% endif %}
+        {% if r.remarks %}<div class="small mt-1"><strong>Remarks:</strong> {{ r.remarks }}</div>{% endif %}
+      {% else %}
+        <button class="btn sb-btn-primary btn-sm w-100 mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#ev{{ p.id }}"><i class="bi bi-pencil-square"></i> Evaluate</button>
+        <div class="collapse" id="ev{{ p.id }}">
+          <form method="POST" class="mt-3 sb-eval">
+            <input type="hidden" name="student_id" value="{{ p.id }}">
+            {% for key, label in [('technical_rating','Technical'), ('communication_rating','Communication'), ('aptitude_rating','Problem solving')] %}
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small">{{ label }}</span>
+              <div class="sb-stars">{% for n in [5,4,3,2,1] %}<input type="radio" name="{{ key }}" value="{{ n }}" id="{{ key }}{{ p.id }}_{{ n }}"><label for="{{ key }}{{ p.id }}_{{ n }}"><i class="bi bi-star-fill"></i></label>{% endfor %}</div>
+            </div>
+            {% endfor %}
+            <div class="sb-result-pick my-2">
+              <div><input type="radio" name="result" value="Selected" id="rs{{ p.id }}" required><label for="rs{{ p.id }}" class="r-sel"><i class="bi bi-check-circle-fill"></i>Selected</label></div>
+              <div><input type="radio" name="result" value="Not Selected" id="rr{{ p.id }}"><label for="rr{{ p.id }}" class="r-rej"><i class="bi bi-x-circle-fill"></i>Not selected</label></div>
+              <div><input type="radio" name="result" value="On Hold" id="rh{{ p.id }}"><label for="rh{{ p.id }}" class="r-hold"><i class="bi bi-pause-circle-fill"></i>On hold</label></div>
+            </div>
+            <div class="sb-reveal-field">
+              <label class="form-label small">Reason <span class="text-danger sb-req">*</span></label>
+              <textarea name="rejection_reason" rows="2" class="form-control"></textarea>
+            </div>
+            <label class="form-label small mt-2">Remarks</label>
+            <textarea name="remarks" rows="2" class="form-control" placeholder="Strengths, gaps, recommendation"></textarea>
+            <button class="btn sb-btn-primary w-100 mt-2"><i class="bi bi-save2"></i> Save evaluation</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12"><div class="sb-card"><div class="sb-empty"><i class="bi bi-people"></i>No students have applied to this drive yet.</div></div></div>
+  {% endfor %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.querySelectorAll('.sb-eval').forEach(function (form) {
+  var box = form.querySelector('.sb-reveal-field'), ta = box.querySelector('textarea'), req = box.querySelector('.sb-req');
+  form.querySelectorAll('input[name=result]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      box.classList.toggle('is-open', r.value !== 'Selected');
+      ta.required = r.value === 'Not Selected';
+      req.style.display = r.value === 'Not Selected' ? '' : 'none';
+    });
+  });
+});
+</script>
+{% endblock %}

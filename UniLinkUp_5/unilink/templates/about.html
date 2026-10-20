@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}About Us — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="row align-items-center g-4 sb-animate-up">
+  <div class="col-md-7">
+    <h2 class="mb-3">About UniLinkUp</h2>
+    <p class="lead text-muted">Today, students, colleges and companies work in silos — with no shared, honest picture of who is actually job-ready. UniLinkUp closes that gap.</p>
+  </div>
+  <div class="col-md-5 text-center">
+    <img src="{{ url_for('static', filename='img/slide-interview.svg') }}" alt="Recruiter and candidate shaking hands" style="max-width:280px; width:100%;">
+  </div>
+</div>
+
+<div class="row g-4 mt-2">
+  <div class="col-md-6">
+    <div class="sb-card">
+      <h5>The Problem</h5>
+      <ul>
+        <li>Skill gaps go unnoticed until interviews.</li>
+        <li>Silent rejections with zero feedback.</li>
+        <li>Disconnected ecosystem between colleges, students and recruiters.</li>
+        <li>No early exposure for 1st/2nd year students.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="sb-card">
+      <h5>Our Solution</h5>
+      <ul>
+        <li>Smart skill & job matching with a live match percentage.</li>
+        <li>Real interview & aptitude practice with instant scoring.</li>
+        <li>Feedback that helps every rejection become a next step.</li>
+        <li>Short-term paid internships for early, real-world experience.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="text-center mt-5">
+  <p class="fw-bold mb-1">Ready to see your match %?</p>
+  <p class="text-muted">Create a profile and find out where you stand — in minutes.</p>
+</div>
+{% endblock %}

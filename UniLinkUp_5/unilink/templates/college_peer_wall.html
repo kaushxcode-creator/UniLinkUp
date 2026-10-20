@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Peer Reference Wall — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Peer Reference Wall</h3>
+<p class="text-muted mb-4">Add a short profile of a placed student — it shows up on every current student's Skill Enhancement page to help them see what's possible.</p>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="sb-card">
+      <h5 class="mb-3">Add a Placed Student</h5>
+      <form method="POST">
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small">Student Name</label>
+            <input type="text" name="student_name" class="form-control" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Placed At (Company)</label>
+            <input type="text" name="company_name" class="form-control" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Role <span class="text-muted fw-normal">(optional)</span></label>
+            <input type="text" name="role" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Package <span class="text-muted fw-normal">(optional)</span></label>
+            <input type="text" name="package_lpa" class="form-control" placeholder="e.g. 6.5 LPA">
+          </div>
+          <div class="col-6">
+            <label class="form-label small">CGPA <span class="text-muted fw-normal">(optional)</span></label>
+            <input type="text" name="cgpa" class="form-control" placeholder="e.g. 8.4">
+          </div>
+        </div>
+        <div class="mt-2 mb-2">
+          <label class="form-label small">Skills <span class="text-muted fw-normal">(comma separated, optional)</span></label>
+          <input type="text" name="skills" class="form-control" placeholder="e.g. Python, SQL, React">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Projects <span class="text-muted fw-normal">(optional)</span></label>
+          <textarea name="projects" class="form-control" rows="2" placeholder="What they built"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">A line of advice / testimonial <span class="text-muted fw-normal">(optional)</span></label>
+          <textarea name="testimonial" class="form-control" rows="2" placeholder="What worked for them"></textarea>
+        </div>
+        <button type="submit" class="btn sb-btn-primary w-100"><i class="bi bi-plus-lg"></i> Add to Wall</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="sb-card">
+      <h5 class="mb-3">On the Wall</h5>
+      {% if entries %}
+        <div class="d-flex flex-column gap-3">
+          {% for e in entries %}
+            <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between flex-wrap gap-2">
+                <div>
+                  <strong>{{ e.student_name }}</strong>
+                  <span class="text-muted small"> &middot; Placed at {{ e.company_name }}{% if e.role %} &middot; {{ e.role }}{% endif %}</span>
+                </div>
+                <form method="POST" action="{{ url_for('delete_peer_reference', entry_id=e.id) }}" onsubmit="return confirm('Remove this entry?');">
+                  <button class="btn btn-sm btn-outline-danger">Remove</button>
+                </form>
+              </div>
+              <div class="small text-muted mt-1">
+                {% if e.cgpa %}CGPA {{ e.cgpa }}{% endif %}{% if e.package_lpa %} &middot; {{ e.package_lpa }}{% endif %}
+              </div>
+              {% if e.skills %}<p class="small mb-1 mt-1"><strong>Skills:</strong> {{ e.skills }}</p>{% endif %}
+              {% if e.projects %}<p class="small mb-1"><strong>Projects:</strong> {{ e.projects }}</p>{% endif %}
+              {% if e.testimonial %}<p class="small text-muted fst-italic mb-0">&ldquo;{{ e.testimonial }}&rdquo;</p>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">Nothing added yet — the form on the left publishes straight to every student's Skill Enhancement page.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

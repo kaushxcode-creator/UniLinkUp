@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block title %}College Login — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="sb-auth-wrap" data-role="college">
+  <div class="sb-auth-panel">
+    <img src="{{ url_for('static', filename='img/auth-login.svg') }}" alt="Secure sign-in illustration">
+    <h3>Placement Cell Login</h3>
+    <p>Any employee related to placements can log in using their official college email ID to manage drives, eligibility criteria and student progress.</p>
+    <div class="alert alert-info small mb-0">
+      <strong><i class="bi bi-magic"></i> Just want to look around?</strong><br>
+      Demo login &middot; ID: <code>officer@reva.edu.in</code> &middot; Password: <code>officer123</code>
+      <button type="button" class="btn btn-sm btn-outline-primary d-block w-100 mt-2"
+              onclick="document.querySelector('input[name=email]').value='officer@reva.edu.in';document.querySelector('input[name=password]').value='officer123';">
+        Use Demo Account
+      </button>
+    </div>
+  </div>
+  <div class="sb-auth-form-side">
+    {% set auth_role, auth_mode = 'college', 'login' %}{% include '_auth_switch.html' %}
+    <h3 class="mb-1">Placement Cell Login</h3>
+    <p class="text-muted small mb-4">New college? <a href="{{ url_for('college_register') }}" data-transition>Register your institution</a>.</p>
+    <form method="POST" data-loading="Logging you in...">
+      <div class="mb-3">
+        <label class="form-label">Official Mail ID</label>
+        <input type="email" name="email" class="form-control" required placeholder="officer@college.edu" autofocus>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" name="password" class="form-control" required>
+      </div>
+      <div class="text-end mb-3">
+        <a href="{{ url_for('college_forgot_password') }}" class="small">Forgot password?</a>
+      </div>
+      <button type="submit" class="btn sb-btn-primary w-100">
+        <i class="bi bi-box-arrow-in-right"></i> Login
+      </button>
+    </form>
+    <p class="text-center mt-4 mb-0 small text-muted">
+      Student? <a href="{{ url_for('login') }}" data-transition>Student Login &rarr;</a>
+    <br>Recruiter? <a href="{{ url_for('company_login') }}" data-transition>Company Login &rarr;</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

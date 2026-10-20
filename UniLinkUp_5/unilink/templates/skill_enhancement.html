@@ -1,0 +1,217 @@
+{% extends 'base.html' %}
+{% block title %}Skill Enhancement — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="mt-3 mb-4">
+  <h3 class="mb-0">Skill Enhancement</h3>
+  <p class="text-muted mb-0">See where you actually stand, then book a 1-on-1 class with a faculty mentor at your college.</p>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="sb-card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Your Skill Gap Analysis</h5>
+        <span class="badge {{ 'sb-badge-open' if analysis.readiness == 'High' else 'sb-badge-closed' }}">
+          Assessment readiness: {{ analysis.readiness }}
+        </span>
+      </div>
+
+      {% if not analysis.has_demand_data %}
+        <p class="text-muted small mb-0">Once your college announces a few company drives with required skills, we'll show exactly which skills to prioritize based on real demand.</p>
+      {% else %}
+        <p class="text-muted small">Based on the skills actually being asked for across drives at your college right now.</p>
+
+        <h6 class="small text-uppercase text-muted mt-3 mb-2">Skills to build next</h6>
+        {% if analysis.gaps %}
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            {% for g in analysis.gaps %}
+              <span class="badge" style="background: var(--sb-red);">{{ g.label }} <span class="opacity-75">&middot; {{ g.count }} drive{{ 's' if g.count != 1 }}</span></span>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="text-muted small">You already cover every skill currently being asked for — nice work. Keep an eye here as new drives are announced.</p>
+        {% endif %}
+
+        {% if analysis.strengths %}
+          <h6 class="small text-uppercase text-muted mt-2 mb-2">Skills already working in your favor</h6>
+          <div class="d-flex flex-wrap gap-2">
+            {% for s in analysis.strengths %}
+              <span class="badge sb-badge-open">{{ s.label }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <hr class="my-3">
+      <a href="{{ url_for('assessment_home') }}" class="btn btn-sm sb-btn-outline"><i class="bi bi-clipboard2-check-fill"></i> Take the Skill Assessment</a>
+      <a href="{{ url_for('profile') }}" class="btn btn-sm sb-btn-outline ms-2"><i class="bi bi-person-circle"></i> Update Your Skills</a>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Your Upcoming Classes</h5>
+      {% if my_appointments %}
+        <div class="d-flex flex-column gap-2">
+          {% for a in my_appointments %}
+            <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <div>
+                  <strong>{{ a.faculty_name }}</strong><br>
+                  <small class="text-muted">{{ a.slot_date | fmt_date }} &middot; {{ a.start_time }}&ndash;{{ a.end_time }}</small>
+                  {% if a.topic %}<br><small class="text-muted">{{ a.topic }}</small>{% endif %}
+                  {% if a.meeting_link %}<br><a href="{{ a.meeting_link }}" target="_blank" class="small"><i class="bi bi-camera-video-fill"></i> Join link</a>{% endif %}
+                </div>
+                <form method="POST" action="{{ url_for('cancel_appointment', appointment_id=a.id) }}" onsubmit="return confirm('Cancel this class?');">
+                  <button class="btn btn-sm btn-outline-danger">Cancel</button>
+                </form>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted small mb-0">Nothing booked yet — pick an open slot below, or request one from a mentor.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3"><i class="bi bi-send-fill"></i> Request a Class</h5>
+      {% if not student.college_id %}
+        <p class="text-muted small mb-0">Link a college to your profile to request a class from a faculty mentor.</p>
+      {% elif not faculty_list %}
+        <p class="text-muted small mb-0">No faculty mentors at your college yet — check back once one joins.</p>
+      {% else %}
+        <p class="text-muted small">Tell a specific mentor what you want to learn — they'll pick a time and approve it.</p>
+        <form method="POST" action="{{ url_for('request_slot') }}">
+          <div class="mb-2">
+            <label class="form-label small">Faculty mentor</label>
+            <select name="faculty_id" class="form-select" required>
+              <option value="" disabled selected>Choose a mentor</option>
+              {% for f in faculty_list %}
+                <option value="{{ f.id }}">{{ f.name }}{% if f.department %} — {{ f.department }}{% endif %}{% if f.expertise %} ({{ f.expertise }}){% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Skill you want to learn</label>
+            {% if analysis.gaps %}
+              <select name="skill_select" class="form-select mb-1">
+                <option value="" selected>Pick from your skill gaps &mdash; or type below</option>
+                {% for g in analysis.gaps %}<option value="{{ g.label }}">{{ g.label }}</option>{% endfor %}
+              </select>
+            {% endif %}
+            <input type="text" name="skill_custom" class="form-control" placeholder="e.g. Data Structures">
+            <div class="form-text">Fill in either field above.</div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small">Anything they should know? <span class="text-muted fw-normal">(optional)</span></label>
+            <textarea name="message" class="form-control" rows="2" placeholder="e.g. I'm preparing for the TCS drive next week"></textarea>
+          </div>
+          <button type="submit" class="btn sb-btn-primary w-100"><i class="bi bi-send-fill"></i> Send Request</button>
+        </form>
+      {% endif %}
+
+      {% if my_requests %}
+        <h6 class="small text-uppercase text-muted mt-4 mb-2">Your Requests</h6>
+        <ul class="list-group list-group-flush">
+          {% for r in my_requests %}
+            <li class="list-group-item px-0">
+              <div class="d-flex justify-content-between align-items-start">
+                <span class="small">{{ r.faculty_name }} &middot; {{ r.skill }}</span>
+                <span class="badge {{ 'sb-badge-open' if r.status == 'approved' else ('sb-badge-closed' if r.status == 'declined' else '') }}"
+                      style="{{ 'background: var(--sb-amber);' if r.status == 'pending' else '' }}">{{ r.status | capitalize }}</span>
+              </div>
+              {% if r.status == 'approved' %}
+                <small class="text-muted">{{ r.proposed_date | fmt_date }} &middot; {{ r.proposed_start }}&ndash;{{ r.proposed_end }}</small>
+              {% elif r.status == 'declined' %}
+                {% if r.decline_reason %}<small class="text-muted d-block">Reason: {{ r.decline_reason }}</small>{% endif %}
+                {% if r.alternate_date %}<small class="text-muted d-block">Another class you can join: {{ r.alternate_date | fmt_date }}</small>{% endif %}
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="sb-card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="bi bi-people-fill"></i> Placed Peers — Get Inspired</h5>
+        <a href="{{ url_for('interview_experiences') }}" class="btn btn-sm sb-btn-outline"><i class="bi bi-chat-square-text"></i> Interview Experiences</a>
+      </div>
+      {% if peer_refs %}
+        <div class="d-flex flex-column gap-3">
+          {% for p in peer_refs %}
+            <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between flex-wrap gap-1">
+                <strong>{{ p.student_name }}</strong>
+                <span class="text-muted small">Placed at {{ p.company_name }}{% if p.role %} &middot; {{ p.role }}{% endif %}</span>
+              </div>
+              <div class="small text-muted mt-1">
+                {% if p.cgpa %}CGPA {{ p.cgpa }}{% endif %}
+                {% if p.package_lpa %} &middot; {{ p.package_lpa }}{% endif %}
+              </div>
+              {% if p.skills %}<p class="small mb-1 mt-1"><strong>Skills:</strong> {{ p.skills }}</p>{% endif %}
+              {% if p.testimonial %}<p class="small text-muted fst-italic mb-0">&ldquo;{{ p.testimonial }}&rdquo;</p>{% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted small mb-0">Your placement cell hasn't added any placed-student stories yet — check back soon.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<h5 class="mb-3">Upcoming Classes You Can Join</h5>
+<p class="text-muted small mt-n2 mb-3">Book a 1-on-1 slot, or join a group class other students are already enrolled in.</p>
+
+{% if not student.college_id %}
+  <div class="alert alert-warning">Link a college to your profile to see the faculty mentors available to you.</div>
+{% elif not open_slots %}
+  <div class="alert alert-info">No open slots right now — check back soon, or ask your placement cell to invite a faculty mentor to UniLinkUp.</div>
+{% else %}
+  <div class="row g-4">
+    {% for s in open_slots %}
+      <div class="col-md-6 col-lg-4">
+        <div class="sb-card h-100 d-flex flex-column">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="sb-icon-circle flex-shrink-0"><i class="bi bi-person-workspace"></i></div>
+            <div>
+              <strong>{{ s.faculty_name }}</strong><br>
+              <small class="text-muted">{{ s.faculty_department or 'Faculty' }}</small>
+            </div>
+          </div>
+          {% if s.faculty_expertise %}<p class="text-muted small mb-2">Expertise: {{ s.faculty_expertise }}</p>{% endif %}
+          <p class="mb-1"><i class="bi bi-calendar3"></i> {{ s.slot_date | fmt_date }}</p>
+          <p class="mb-2"><i class="bi bi-clock"></i> {{ s.start_time }} &ndash; {{ s.end_time }}</p>
+          {% if s.topic %}<p class="text-muted small mb-2">{{ s.topic }}</p>{% endif %}
+          <p class="small mb-3">
+            {% if s.capacity > 1 %}
+              <span class="badge sb-badge-open">{{ s.seats_taken }}/{{ s.capacity }} joined</span>
+              {% if s.seats_taken > 0 and not s.already_joined %}<span class="text-muted"> &middot; join {{ s.seats_taken }} other{{ 's' if s.seats_taken != 1 }} learning this</span>{% endif %}
+            {% endif %}
+          </p>
+          {% if s.already_joined %}
+            <div class="mt-auto">
+              <span class="badge sb-badge-open d-block mb-2 py-2">You're enrolled</span>
+              {% if s.meeting_link %}<a href="{{ s.meeting_link }}" target="_blank" class="btn sb-btn-outline w-100"><i class="bi bi-camera-video-fill"></i> Join link</a>{% endif %}
+            </div>
+          {% else %}
+            <form method="POST" action="{{ url_for('book_slot', slot_id=s.id) }}" class="mt-auto">
+              <button type="submit" class="btn sb-btn-primary w-100"><i class="bi bi-calendar2-check"></i> {{ 'Join This Class' if s.capacity > 1 else 'Book This Slot' }}</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% endblock %}

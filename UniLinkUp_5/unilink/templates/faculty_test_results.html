@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}{{ test.title }} — Results — UniLinkUp{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('faculty_tests') }}" class="small d-inline-block mb-2"><i class="bi bi-arrow-left"></i> Back to Create Test</a>
+<h3 class="mb-1">{{ test.title }}</h3>
+{% if test.description %}<p class="text-muted mb-4">{{ test.description }}</p>{% endif %}
+
+<div class="sb-card">
+  <h5 class="mb-3">Attempts</h5>
+  {% if attempts %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead><tr><th>Student</th><th>Course</th><th>Score</th><th>Taken</th></tr></thead>
+        <tbody>
+          {% for a in attempts %}
+            <tr>
+              <td>{{ a.student_name }}</td>
+              <td>{{ a.student_course or '—' }}</td>
+              <td>{{ a.score }}/{{ a.total }}</td>
+              <td>{{ a.taken_at[:10] | fmt_date }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-muted mb-0">No one has taken this test yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

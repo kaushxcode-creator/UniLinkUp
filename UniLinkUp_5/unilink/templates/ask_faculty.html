@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Ask Faculty — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Ask Faculty</h3>
+<p class="text-muted mb-4">Post an academic doubt for any faculty in that department to answer, or message a mentor directly.</p>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3"><i class="bi bi-question-circle-fill"></i> Post a Doubt</h5>
+      <form method="POST" action="{{ url_for('submit_doubt') }}" enctype="multipart/form-data">
+        <div class="mb-2">
+          <label class="form-label small">Department</label>
+          <select name="department" class="form-select">
+            <option value="">Select Department</option>
+            {% for d in departments %}
+              <option value="{{ d }}" {{ 'selected' if student.department == d }}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Subject</label>
+          <input type="text" name="subject" class="form-control" placeholder="e.g. Doubt about normalization in DBMS" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Your question</label>
+          <textarea name="message" class="form-control" rows="3" required></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">Attach an image <span class="text-muted fw-normal">(optional — e.g. a screenshot of the problem)</span></label>
+          <input type="file" name="image" class="form-control" accept=".png,.jpg,.jpeg,.gif">
+        </div>
+        <button type="submit" class="btn sb-btn-primary w-100"><i class="bi bi-send-fill"></i> Post Doubt</button>
+      </form>
+
+      {% if my_doubts %}
+        <h6 class="small text-uppercase text-muted mt-4 mb-2">Your Doubts</h6>
+        <div class="d-flex flex-column gap-2">
+          {% for d in my_doubts %}
+            <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <strong class="small">{{ d.subject }}</strong>
+                <span class="badge {{ 'sb-badge-open' if d.status == 'answered' else '' }}"
+                      style="{{ 'background: var(--sb-amber);' if d.status == 'open' }}">{{ d.status | capitalize }}</span>
+              </div>
+              <p class="small text-muted mb-1">{{ d.message }}</p>
+              {% if d.image_path %}
+                <a href="{{ url_for('uploaded_file', subfolder='doubts', filename=d.image_path) }}" target="_blank">
+                  <img src="{{ url_for('uploaded_file', subfolder='doubts', filename=d.image_path) }}" class="img-fluid rounded-3 mb-2" style="max-height: 160px;" alt="Doubt attachment">
+                </a>
+              {% endif %}
+              {% if d.answer %}
+                <p class="small mb-1"><strong>{{ d.faculty_name }}:</strong> {{ d.answer }}</p>
+                {% if d.answer_image_path %}
+                  <a href="{{ url_for('uploaded_file', subfolder='doubts', filename=d.answer_image_path) }}" target="_blank">
+                    <img src="{{ url_for('uploaded_file', subfolder='doubts', filename=d.answer_image_path) }}" class="img-fluid rounded-3 mb-0" style="max-height: 160px;" alt="Answer attachment">
+                  </a>
+                {% endif %}
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3"><i class="bi bi-chat-dots-fill"></i> Message a Mentor</h5>
+      {% if not faculty_list %}
+        <p class="text-muted small mb-0">No faculty at your college yet.</p>
+      {% else %}
+        {% if threads %}
+          <h6 class="small text-uppercase text-muted mb-2">Recent Conversations</h6>
+          <ul class="list-group list-group-flush mb-3">
+            {% for t in threads %}
+              <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                <a href="{{ url_for('message_thread', other_id=t.faculty_id) }}">{{ t.faculty_name }}</a>
+                {% if t.unread %}<span class="sb-bell-badge" style="position:static;">{{ t.unread }}</span>{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        <h6 class="small text-uppercase text-muted mb-2">Start a New Conversation</h6>
+        <ul class="list-group list-group-flush">
+          {% for f in faculty_list %}
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <div>
+                <span>{{ f.name }}</span>
+                <span class="text-muted small">{{ f.department or '' }}</span>
+              </div>
+              <a href="{{ url_for('message_thread', other_id=f.id) }}" class="btn btn-sm sb-btn-outline">Message</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

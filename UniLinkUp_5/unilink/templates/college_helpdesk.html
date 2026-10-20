@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Help Desk — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Help Desk</h3>
+<p class="text-muted mb-4">Queries raised by your students, newest and unresolved first.</p>
+
+{% if not tickets %}
+  <div class="alert alert-info">No queries from students yet.</div>
+{% else %}
+  <div class="d-flex flex-column gap-3">
+    {% for t in tickets %}
+      <div class="sb-card">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <strong>{{ t.subject }}</strong>
+            {% if t.category %}<span class="badge sb-eligibility-overview ms-1">{{ t.category }}</span>{% endif %}
+            <br>
+            <small class="text-muted">{{ t.student_name }} · {{ t.student_srn }} · {{ t.student_email }}</small><br>
+            <small class="text-muted">{{ t.created_at[:16] }}</small>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge {{ 'sb-badge-closed' if t.status == 'resolved' else 'sb-badge-open' }}">
+              {{ 'Resolved' if t.status == 'resolved' else 'Open' }}
+            </span>
+            <form method="POST" action="{{ url_for('resolve_ticket', ticket_id=t.id) }}">
+              <button class="btn btn-sm sb-btn-outline">
+                {{ 'Reopen' if t.status == 'resolved' else 'Mark Resolved' }}
+              </button>
+            </form>
+          </div>
+        </div>
+        <p class="mb-0 mt-2">{{ t.message }}</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+{% endblock %}

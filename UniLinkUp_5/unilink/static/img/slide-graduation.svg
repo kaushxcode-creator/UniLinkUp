@@ -1,0 +1,51 @@
+<svg viewBox="0 0 600 450" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Graduate holding a certificate next to a laptop showing a checkmark">
+  <defs>
+    <linearGradient id="g1bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e8fbf5"/>
+      <stop offset="100%" stop-color="#d3f3ea"/>
+    </linearGradient>
+  </defs>
+  <circle cx="300" cy="225" r="200" fill="url(#g1bg)"/>
+  <ellipse cx="300" cy="392" rx="170" ry="18" fill="#0d2b2f" opacity="0.08"/>
+
+  <!-- floating dots / confetti -->
+  <circle cx="120" cy="100" r="7" fill="#e8823c"/>
+  <circle cx="470" cy="120" r="5" fill="#14b391"/>
+  <circle cx="500" cy="260" r="8" fill="#e8823c" opacity="0.8"/>
+  <circle cx="95" cy="290" r="6" fill="#14b391"/>
+  <rect x="440" y="70" width="14" height="14" rx="3" fill="#6fe0c4" transform="rotate(20 447 77)"/>
+  <rect x="80" y="200" width="10" height="10" rx="2" fill="#e8823c" transform="rotate(-15 85 205)"/>
+
+  <!-- laptop -->
+  <g>
+    <rect x="60" y="255" width="150" height="100" rx="10" fill="#0d2b2f"/>
+    <rect x="72" y="266" width="126" height="78" rx="4" fill="#ffffff"/>
+    <path d="M60 355 L210 355 L225 372 L45 372 Z" fill="#123a3f"/>
+    <path d="M118 300 l14 14 26 -30" stroke="#14b391" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- podium -->
+  <rect x="255" y="330" width="90" height="45" rx="6" fill="#14b391"/>
+  <rect x="240" y="375" width="120" height="16" rx="6" fill="#0e8a70"/>
+
+  <!-- graduate figure -->
+  <g>
+    <!-- body / gown -->
+    <path d="M255 330 C255 270 235 250 300 245 C365 250 345 270 345 330 Z" fill="#0d2b2f"/>
+    <!-- sash -->
+    <path d="M280 250 L320 330" stroke="#e8823c" stroke-width="10" stroke-linecap="round"/>
+    <!-- head -->
+    <circle cx="300" cy="205" r="38" fill="#f2c29b"/>
+    <!-- cap -->
+    <path d="M250 190 L300 168 L350 190 L300 205 Z" fill="#123a3f"/>
+    <rect x="294" y="188" width="12" height="12" rx="2" fill="#123a3f"/>
+    <path d="M345 190 L360 200 L345 212" stroke="#e8823c" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="345" cy="215" r="4" fill="#e8823c"/>
+  </g>
+
+  <!-- diploma scroll held up -->
+  <g>
+    <rect x="352" y="245" width="70" height="20" rx="10" fill="#f6efe3" stroke="#e8823c" stroke-width="3" transform="rotate(-18 387 255)"/>
+    <path d="M352 245 L330 232" stroke="#0d2b2f" stroke-width="10" stroke-linecap="round"/>
+  </g>
+</svg>

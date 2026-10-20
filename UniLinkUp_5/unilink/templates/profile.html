@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-4">My Profile</h3>
+
+<div class="sb-card mb-4">
+  <div class="d-flex align-items-center gap-3 flex-wrap">
+    {% if student.profile_picture %}
+      <img src="{{ url_for('uploaded_file', subfolder='profile_pictures', filename=student.profile_picture) }}"
+           alt="Profile picture" class="rounded-circle" style="width: 84px; height: 84px; object-fit: cover;">
+    {% else %}
+      <div class="rounded-circle d-flex align-items-center justify-content-center text-white"
+           style="width: 84px; height: 84px; background: var(--sb-teal); font-size: 2rem;">
+        {{ student.name[:1] | upper }}
+      </div>
+    {% endif %}
+    <div class="flex-grow-1">
+      <h5 class="mb-1">{{ student.name }}</h5>
+      <p class="text-muted small mb-2">{{ student.course or '' }}{% if student.department %} &middot; {{ student.department }}{% endif %}</p>
+      <form method="POST" action="{{ url_for('upload_profile_picture') }}" enctype="multipart/form-data" class="d-flex gap-2 flex-wrap">
+        <input type="file" name="file" class="form-control form-control-sm" style="max-width: 260px;" accept=".png,.jpg,.jpeg,.gif" required>
+        <button type="submit" class="btn btn-sm sb-btn-primary">{{ 'Change Picture' if student.profile_picture else 'Upload Picture' }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="sb-card mb-4">
+  <h6 class="text-muted">Overall Progress</h6>
+  <div class="progress mb-2">
+    <div class="progress-bar" role="progressbar" style="width: {{ progress }}%">
+      {{ progress }}%
+    </div>
+  </div>
+  <small class="text-muted">Based on profile completeness, main assessment attempt, and certificates uploaded.</small>
+</div>
+
+<div class="sb-card mb-4">
+  <h6 class="text-muted mb-3">Your Snapshot</h6>
+  <div class="row g-3 text-center">
+    <div class="col-6 col-md">
+      <div class="h4 mb-0">{{ student.cgpa or '—' }}</div>
+      <div class="text-muted small">CGPA{% if snapshot.cgpa_percentile is not none %} &middot; ahead of {{ snapshot.cgpa_percentile }}% of your college{% endif %}</div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="h4 mb-0">{{ snapshot.skill_count }}</div>
+      <div class="text-muted small">Skills Listed</div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="h4 mb-0">{{ snapshot.certificate_count }}</div>
+      <div class="text-muted small">Certificates</div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="h4 mb-0">{{ snapshot.best_assessment or 'Not yet' }}</div>
+      <div class="text-muted small">Best Assessment Score</div>
+    </div>
+    <div class="col-6 col-md">
+      <div class="h4 mb-0">{{ snapshot.learning_hours }}</div>
+      <div class="text-muted small">Learning Hours</div>
+    </div>
+  </div>
+  <div class="text-center mt-3">
+    <a href="{{ url_for('skill_enhancement') }}" class="btn btn-sm sb-btn-outline"><i class="bi bi-lightbulb-fill"></i> See your Skill Gap Analysis</a>
+    <a href="{{ url_for('learning_hours') }}" class="btn btn-sm sb-btn-outline"><i class="bi bi-clock-history"></i> Log Learning Hours</a>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Personal Info -->
+  <div class="col-md-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Personal & Academic Info</h5>
+      <form method="POST">
+        <div class="row g-2">
+          <div class="col-6"><label class="form-label small">Name</label><input class="form-control" value="{{ student.name }}" disabled></div>
+          <div class="col-6"><label class="form-label small">SRN</label><input class="form-control" value="{{ student.srn }}" disabled></div>
+          <div class="col-6"><label class="form-label small">Mail ID</label><input class="form-control" value="{{ student.email }}" disabled></div>
+          <div class="col-6"><label class="form-label small">Section</label><input class="form-control" name="section" value="{{ student.section or '' }}"></div>
+          <div class="col-6"><label class="form-label small">Course</label><input class="form-control" name="course" value="{{ student.course or '' }}"></div>
+          <div class="col-6">
+            <label class="form-label small">Department</label>
+            <select class="form-select" name="department">
+              <option value="" {{ 'selected' if not student.department else '' }}>Select Department</option>
+              {% for d in ['Computer Science', 'Information Science', 'Electronics & Communication', 'Electrical & Electronics', 'AI & Machine Learning', 'Data Science', 'Mechanical', 'Civil', 'MBA', 'MCA', 'Other'] %}
+                <option value="{{ d }}" {{ 'selected' if student.department==d else '' }}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-6"><label class="form-label small">Year</label><input class="form-control" name="year" value="{{ student.year or '' }}"></div>
+          <div class="col-6"><label class="form-label small">Semester</label><input class="form-control" name="semester" value="{{ student.semester or '' }}"></div>
+          <div class="col-6"><label class="form-label small">CGPA</label><input class="form-control" name="cgpa" value="{{ student.cgpa or '' }}"></div>
+          <div class="col-12">
+            <label class="form-label small">Skills <span class="text-muted">(comma separated)</span></label>
+            <input class="form-control" name="skills" placeholder="e.g. Python, SQL, React" value="{{ student.skills or '' }}">
+            <div class="form-text">Feeds directly into your Eligibility Match % for every company drive.</div>
+          </div>
+        </div>
+        <button type="submit" class="btn sb-btn-primary mt-3">Save Changes</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assessment results -->
+  <div class="col-md-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Assessment History</h5>
+      {% if results %}
+        <ul class="list-group list-group-flush">
+          {% for r in results %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span class="text-capitalize">{{ r.mode }} — {{ r.taken_at[:10] | fmt_date }}</span>
+              <strong>{{ r.score }}/{{ r.total }}</strong>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted">No assessments taken yet. <a href="{{ url_for('assessment_home') }}">Start one now.</a></p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Certificates -->
+  <div class="col-md-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Certificates</h5>
+      <ul class="list-group list-group-flush mb-3">
+        {% for cert in certificates %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ cert.title }}
+            <a class="btn btn-sm sb-btn-outline" href="{{ url_for('uploaded_file', subfolder='certificates', filename=cert.filename) }}" target="_blank">View</a>
+          </li>
+        {% else %}
+          <li class="list-group-item text-muted">No certificates uploaded yet.</li>
+        {% endfor %}
+      </ul>
+      <form method="POST" action="{{ url_for('upload_certificate') }}" enctype="multipart/form-data">
+        <div class="input-group">
+          <input type="text" name="title" class="form-control" placeholder="Certificate title" required>
+          <input type="file" name="file" class="form-control" required>
+          <button class="btn sb-btn-primary" type="submit">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Documents -->
+  <div class="col-md-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Documents</h5>
+      <ul class="list-group list-group-flush mb-3">
+        {% for doc in documents %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ doc.title }}
+            <a class="btn btn-sm sb-btn-outline" href="{{ url_for('uploaded_file', subfolder='documents', filename=doc.filename) }}" target="_blank">View</a>
+          </li>
+        {% else %}
+          <li class="list-group-item text-muted">No documents uploaded yet.</li>
+        {% endfor %}
+      </ul>
+      <form method="POST" action="{{ url_for('upload_document') }}" enctype="multipart/form-data">
+        <div class="input-group">
+          <input type="text" name="title" class="form-control" placeholder="Document title (e.g. Resume)" required>
+          <input type="file" name="file" class="form-control" required>
+          <button class="btn sb-btn-primary" type="submit">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Resume + offline ATS score -->
+  <div class="col-md-12">
+    <div class="sb-card h-100">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h5 class="mb-0">Resume &amp; ATS Score</h5>
+        <div class="d-flex align-items-center gap-2">
+          <a href="{{ url_for('resume_builder') }}" class="btn btn-sm sb-btn-outline"><i class="bi bi-magic"></i> Resume Builder</a>
+          {% if latest_resume %}
+            {% set is_mid = latest_resume.ats_score >= 60 and latest_resume.ats_score < 80 %}
+            <span class="badge {{ 'sb-badge-open' if latest_resume.ats_score >= 80 else ('' if is_mid else 'sb-badge-closed') }}"
+                  style="{{ 'background: var(--sb-amber);' if is_mid else '' }}">
+              ATS Score: {{ latest_resume.ats_score }}/100
+            </span>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if latest_resume %}
+        <p class="mb-2">
+          {% if latest_resume.verification_status == 'verified' %}
+            <span class="badge sb-badge-open"><i class="bi bi-patch-check-fill"></i> Verified by your placement cell</span>
+          {% elif latest_resume.verification_status == 'rejected' %}
+            <span class="badge sb-badge-closed"><i class="bi bi-x-octagon-fill"></i> Verification rejected</span>
+          {% else %}
+            <span class="badge" style="background: var(--sb-amber);"><i class="bi bi-hourglass-split"></i> Awaiting verification</span>
+          {% endif %}
+          <span class="text-muted small ms-1">— a resume must be verified before your placement cell can share it with a company.</span>
+        </p>
+        {% if latest_resume.verification_status == 'rejected' and (latest_resume.verification_note or latest_resume.verification_suggestion) %}
+          <div class="border rounded-4 p-2 mb-2 small" style="border-color: var(--sb-border) !important;">
+            {% if latest_resume.verification_note %}
+              <div class="mb-1"><strong>Reason:</strong> {{ latest_resume.verification_note }}</div>
+            {% endif %}
+            {% if latest_resume.verification_suggestion %}
+              <div><strong>Suggestion to improve:</strong> {{ latest_resume.verification_suggestion }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+        <p class="text-muted small mb-2">Latest: <strong>{{ latest_resume.title }}</strong> &middot; uploaded {{ latest_resume.uploaded_at[:10] | fmt_date }}
+          &middot; <a href="{{ url_for('uploaded_file', subfolder='resumes', filename=latest_resume.filename) }}" target="_blank">View file</a>
+          &middot; <a href="{{ url_for('uploaded_file', subfolder='resumes', filename=latest_resume.filename, download=1) }}">Download</a>
+        </p>
+        {% if latest_feedback %}
+          <h6 class="small text-uppercase text-muted mt-3 mb-2">{{ 'To push this toward 90+' if latest_resume.ats_score < 90 else 'What is already working' }}</h6>
+          <ul class="mb-0">
+            {% for tip in latest_feedback %}
+              <li class="small">{{ tip }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% else %}
+        <p class="text-muted small">Upload your resume to get an instant, offline readability/completeness score plus concrete suggestions — nothing is sent anywhere outside this app.</p>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('upload_resume') }}" enctype="multipart/form-data" class="mt-3">
+        <div class="input-group">
+          <input type="text" name="title" class="form-control" placeholder="e.g. Resume v2" value="Resume">
+          <input type="file" name="file" class="form-control" accept=".pdf,.doc,.docx,.txt" required>
+          <button class="btn sb-btn-primary" type="submit">{{ 'Re-check Score' if latest_resume else 'Upload & Score' }}</button>
+        </div>
+        <div class="form-text">PDF, DOC, DOCX or TXT. Each upload is scored fresh — upload a revised version any time to see your new score.</div>
+      </form>
+
+      {% if resumes|length > 1 %}
+        <h6 class="small text-uppercase text-muted mt-4 mb-2">Previous Uploads</h6>
+        <ul class="list-group list-group-flush">
+          {% for r in resumes[1:] %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>{{ r.title }} &middot; {{ r.uploaded_at[:10] | fmt_date }}</span>
+              <span class="badge sb-badge-closed">{{ r.ats_score }}/100</span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% if resume_shares %}
+        <h6 class="small text-uppercase text-muted mt-4 mb-2">Shared With Companies</h6>
+        <ul class="list-group list-group-flush">
+          {% for s in resume_shares %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <span>
+                <i class="bi {{ 'bi-cloud-arrow-up-fill' if s.method == 'drive' else 'bi-envelope-fill' }} text-muted"></i>
+                {{ s.company_name or s.company_email or 'Shared as a link' }} &middot; {{ s.created_at[:10] | fmt_date }}
+              </span>
+              <span class="badge {{ 'sb-badge-open' if s.status == 'sent' else 'sb-badge-closed' }}">
+                {{ 'Uploaded to Drive' if (s.method == 'drive' and s.status == 'sent') else
+                   ('Link generated' if s.method == 'drive' else s.status | capitalize) }}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

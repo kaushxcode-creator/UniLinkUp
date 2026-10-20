@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}Resumes — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Resumes</h3>
+<p class="text-muted mb-4">Verify a student's resume before sharing it with a company — sharing is blocked
+  entirely for anything not yet verified.</p>
+
+<div class="sb-card mb-4">
+  <h5 class="mb-3">Student Resumes</h5>
+  {% if resumes %}
+    <div class="d-flex flex-column gap-3">
+      {% for r in resumes %}
+        <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+          <div class="d-flex justify-content-between flex-wrap gap-2">
+            <div>
+              <strong>{{ r.student_name }}</strong>
+              <span class="text-muted small"> &middot; {{ r.student_course or '—' }} &middot; {{ r.title }}</span>
+              <br>
+              <a href="{{ url_for('uploaded_file', subfolder='resumes', filename=r.filename) }}" target="_blank" class="small">View file</a>
+              <span class="text-muted small"> &middot; ATS {{ r.ats_score }}/100 &middot; uploaded {{ r.uploaded_at[:10] | fmt_date }}</span>
+            </div>
+            <div class="text-end">
+              {% if r.verification_status == 'verified' %}
+                <span class="badge sb-badge-open"><i class="bi bi-patch-check-fill"></i> Verified</span>
+                <div class="text-muted small">by {{ r.verified_by_name }} &middot; {{ r.verified_at[:10] | fmt_date }}</div>
+              {% elif r.verification_status == 'rejected' %}
+                <span class="badge sb-badge-closed"><i class="bi bi-x-octagon-fill"></i> Rejected</span>
+                <div class="text-muted small text-start text-md-end mt-1" style="max-width: 320px;">
+                  {% if r.verification_note %}<div><strong>Reason:</strong> {{ r.verification_note }}</div>{% endif %}
+                  {% if r.verification_suggestion %}<div><strong>Suggestion:</strong> {{ r.verification_suggestion }}</div>{% endif %}
+                </div>
+              {% else %}
+                <span class="badge" style="background: var(--sb-amber);"><i class="bi bi-hourglass-split"></i> Pending</span>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if r.verification_status != 'verified' %}
+            <div class="d-flex gap-2 mt-2 flex-wrap align-items-start">
+              <form method="POST" action="{{ url_for('verify_resume', resume_id=r.id) }}">
+                <button class="btn btn-sm sb-btn-primary"><i class="bi bi-check2"></i> Verify</button>
+              </form>
+              <details class="flex-grow-1" style="min-width: 260px;">
+                <summary class="btn btn-sm btn-outline-danger" style="cursor:pointer;">
+                  <i class="bi bi-x-octagon"></i> Reject
+                </summary>
+                <form method="POST" action="{{ url_for('reject_resume', resume_id=r.id) }}"
+                      class="row g-2 mt-1 border rounded-4 p-2" style="border-color: var(--sb-border) !important;">
+                  <div class="col-12">
+                    <label class="form-label small mb-1">Reason for rejection <span class="text-danger">*</span></label>
+                    <textarea name="reason" class="form-control form-control-sm" rows="2" required
+                              placeholder="e.g. Missing a Skills section, and the formatting is inconsistent."></textarea>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label small mb-1">Suggestion to improve <span class="text-danger">*</span></label>
+                    <textarea name="suggestion" class="form-control form-control-sm" rows="2" required
+                              placeholder="e.g. Add a dedicated Skills section and re-upload using one consistent font size."></textarea>
+                  </div>
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                      <i class="bi bi-x-octagon-fill"></i> Confirm Rejection
+                    </button>
+                  </div>
+                </form>
+              </details>
+            </div>
+          {% else %}
+            <details class="mt-2">
+              <summary class="small" style="cursor:pointer;"><i class="bi bi-share-fill"></i> Share with a company</summary>
+              <ul class="nav nav-tabs nav-tabs-sm mt-2" role="tablist">
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link active small" data-bs-toggle="tab" data-bs-target="#sbEmailTab{{ r.id }}" type="button">
+                    <i class="bi bi-envelope-fill"></i> Email it
+                  </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                  <button class="nav-link small" data-bs-toggle="tab" data-bs-target="#sbDriveTab{{ r.id }}" type="button">
+                    <i class="bi bi-cloud-arrow-up-fill"></i> Share a link / Drive
+                  </button>
+                </li>
+              </ul>
+              <div class="tab-content border border-top-0 rounded-bottom-3 p-2" style="border-color: var(--sb-border) !important;">
+                <div class="tab-pane fade show active" id="sbEmailTab{{ r.id }}">
+                  <form method="POST" action="{{ url_for('share_resume', resume_id=r.id) }}" class="row g-2">
+                    <div class="col-md-4">
+                      <input type="text" name="company_name" class="form-control form-control-sm" placeholder="Company name">
+                    </div>
+                    <div class="col-md-4">
+                      <input type="email" name="company_email" class="form-control form-control-sm" placeholder="Company email" required>
+                    </div>
+                    <div class="col-md-4">
+                      <input type="text" name="message" class="form-control form-control-sm" placeholder="Message (optional)">
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm sb-btn-outline"><i class="bi bi-send-fill"></i> Email Resume</button>
+                    </div>
+                  </form>
+                </div>
+                <div class="tab-pane fade" id="sbDriveTab{{ r.id }}">
+                  <p class="text-muted small mb-2">
+                    Generates a shareable link (a real Google Drive upload if it's configured — see the
+                    README — otherwise a UniLinkUp-hosted link that works the same way) that you can copy
+                    and send however you like.
+                  </p>
+                  <form method="POST" action="{{ url_for('share_resume_drive', resume_id=r.id) }}" class="row g-2">
+                    <div class="col-md-8">
+                      <input type="text" name="company_name" class="form-control form-control-sm" placeholder="Company name (optional, for your records)">
+                    </div>
+                    <div class="col-12">
+                      <button type="submit" class="btn btn-sm sb-btn-outline"><i class="bi bi-link-45deg"></i> Generate Link</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </details>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted mb-0">No resumes uploaded by students at your college yet.</p>
+  {% endif %}
+</div>
+
+<div class="sb-card">
+  <h5 class="mb-3">Recent Shares</h5>
+  {% if shares %}
+    <ul class="list-group list-group-flush">
+      {% for s in shares %}
+        <li class="list-group-item">
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>
+              <i class="bi {{ 'bi-cloud-arrow-up-fill' if s.method == 'drive' else 'bi-envelope-fill' }} text-muted"></i>
+              {{ s.student_name }} &rarr; {{ s.company_name or s.company_email or 'link share' }}
+              &middot; {{ s.created_at[:10] | fmt_date }}
+            </span>
+            <span class="badge {{ 'sb-badge-open' if s.status == 'sent' else 'sb-badge-closed' }}">
+              {{ 'Uploaded to Drive' if (s.method == 'drive' and s.status == 'sent') else
+                 ('Link generated' if s.method == 'drive' else s.status | capitalize) }}
+            </span>
+          </div>
+          {% if s.share_url %}
+            <a href="{{ s.share_url }}" target="_blank" class="small d-block mt-1 text-truncate">{{ s.share_url }}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted mb-0">No resumes have been shared yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

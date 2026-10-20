@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Students — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 mb-4">
+  <div>
+    <h3 class="mb-0">Students</h3>
+    <p class="text-muted small mb-0">Directory and placement readiness in one place.</p>
+  </div>
+  {% if students %}
+    <div class="d-flex gap-2 flex-wrap">
+      <select id="sbFilterDept" class="form-select form-select-sm" style="width: auto;">
+        <option value="">All Departments</option>
+        {% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+      </select>
+      <select id="sbFilterCourse" class="form-select form-select-sm" style="width: auto;">
+        <option value="">All Courses</option>
+        {% for c in courses %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+  {% endif %}
+</div>
+
+{% if not students %}
+  <div class="alert alert-info">No students have registered under your college yet.</div>
+{% else %}
+
+  {% for dept, dept_group in students|groupby('department') %}
+    <div class="sb-student-dept-group mb-4" data-department="{{ dept }}">
+      <h5 class="mb-3">
+        <span class="badge sb-eligibility-overview">{{ dept }}</span>
+        <span class="text-muted small fw-normal ms-1">{{ dept_group|list|length }} student(s)</span>
+      </h5>
+
+      {% for course, course_group in dept_group|groupby('course') %}
+        <div class="sb-student-course-group mb-3" data-course="{{ course }}">
+          <h6 class="text-muted small text-uppercase mb-2">{{ course }}</h6>
+          <div class="table-responsive">
+            <table class="table align-middle sb-card mb-0">
+              <thead>
+                <tr>
+                  <th>Name</th><th>SRN</th><th>Section</th>
+                  <th>Year</th><th>Semester</th><th>CGPA</th><th>Mail ID</th>
+                  <th>Best Assessment Score</th><th>Certificates</th>
+                  <th style="width:200px;">Overall Progress</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in course_group %}
+                  <tr>
+                    <td>{{ s.name }}</td>
+                    <td>{{ s.srn }}</td>
+                    <td>{{ s.section }}</td>
+                    <td>{{ s.year }}</td>
+                    <td>{{ s.semester }}</td>
+                    <td>{{ s.cgpa }}</td>
+                    <td>{{ s.email }}</td>
+                    <td>{{ s.best_score }}</td>
+                    <td>{{ s.certificates }}</td>
+                    <td>
+                      <div class="progress">
+                        <div class="progress-bar" style="width:{{ s.progress }}%">{{ s.progress }}%</div>
+                      </div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+
+  <p class="text-muted small" id="sbNoMatch" hidden>No students match this filter.</p>
+
+  <script>
+    (function () {
+      var deptSel = document.getElementById('sbFilterDept');
+      var courseSel = document.getElementById('sbFilterCourse');
+      var noMatch = document.getElementById('sbNoMatch');
+      if (!deptSel || !courseSel) return;
+
+      function apply() {
+        var dept = deptSel.value, course = courseSel.value;
+        var anyDeptVisible = false;
+        document.querySelectorAll('.sb-student-dept-group').forEach(function (deptEl) {
+          var deptMatches = !dept || deptEl.dataset.department === dept;
+          var anyCourseVisible = false;
+          deptEl.querySelectorAll('.sb-student-course-group').forEach(function (courseEl) {
+            var courseMatches = !course || courseEl.dataset.course === course;
+            var visible = deptMatches && courseMatches;
+            courseEl.hidden = !visible;
+            if (visible) anyCourseVisible = true;
+          });
+          deptEl.hidden = !anyCourseVisible;
+          if (anyCourseVisible) anyDeptVisible = true;
+        });
+        noMatch.hidden = anyDeptVisible;
+      }
+
+      deptSel.addEventListener('change', apply);
+      courseSel.addEventListener('change', apply);
+    })();
+  </script>
+
+{% endif %}
+
+{% endblock %}

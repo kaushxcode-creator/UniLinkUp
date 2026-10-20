@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}UniLinkUp — From Campus Learning to Career Launch{% endblock %}
+{% block body_class %}sb-landing{% endblock %}
+
+{% block main %}
+{# ------------------------------------------------------------------
+   1. Intro splash — plays once per browser session (see motion.js)
+   ------------------------------------------------------------------ #}
+<div class="sb-preloader" id="sbPreloader" aria-hidden="true">
+  <div class="sb-preloader-inner">
+    <svg class="sb-preloader-logo" viewBox="0 0 64 64" width="96" height="96">
+      <rect x="7" y="19" width="28" height="16" rx="8" transform="rotate(-32 21 27)" fill="none" stroke="#6fe0c4" stroke-width="5" pathLength="100"/>
+      <rect x="29" y="29" width="28" height="16" rx="8" transform="rotate(-32 43 37)" fill="none" stroke="#e8823c" stroke-width="5" pathLength="100"/>
+    </svg>
+    <div class="sb-preloader-word">
+      {% for ch in 'UniLinkUp' %}<span style="--i:{{ loop.index0 }}">{{ ch }}</span>{% endfor %}
+    </div>
+    <div class="sb-preloader-tag">From Campus Learning to Career Launch</div>
+    <div class="sb-preloader-bar"><span></span></div>
+  </div>
+  <div class="sb-preloader-panel sb-preloader-panel-top"></div>
+  <div class="sb-preloader-panel sb-preloader-panel-bottom"></div>
+</div>
+
+{# ------------------------------------------------------------------
+   2. Hero — "What is UniLinkUp?" slideshow on a live network canvas
+   ------------------------------------------------------------------ #}
+<section class="sb-l-hero" id="top">
+  <canvas class="sb-l-net" id="sbNetCanvas" aria-hidden="true"></canvas>
+  <div class="sb-l-blob sb-l-blob-a"></div>
+  <div class="sb-l-blob sb-l-blob-b"></div>
+  <div class="sb-l-blob sb-l-blob-c"></div>
+
+  <div class="container position-relative">
+    <div class="sb-l-head text-center">
+      <span class="sb-l-eyebrow sb-reveal" style="--d:.05s"><i class="bi bi-stars"></i> Campus placement, reimagined</span>
+      <h1 class="sb-l-title">
+        <span class="sb-split-word sb-reveal" style="--d:.15s">What</span>
+        <span class="sb-split-word sb-reveal" style="--d:.25s">is</span>
+        <span class="sb-split-word sb-reveal sb-grad-text" style="--d:.35s">UniLinkUp?</span>
+      </h1>
+      <p class="sb-l-sub sb-reveal" style="--d:.5s">
+        One platform that links
+        <span class="sb-typed" data-words="Students|Faculty|Colleges|Companies">Students</span><span class="sb-caret">|</span>
+      </p>
+    </div>
+
+    <div class="sb-show sb-reveal" style="--d:.65s" id="sbShow" tabindex="0" aria-roledescription="carousel" aria-label="What is UniLinkUp">
+      {% set slides = [
+        {'img': 'slide-teamwork.svg', 'tag': 'The idea', 'title': 'One portal for four communities',
+         'text': 'UniLinkUp brings students, faculty, colleges and companies onto one placement platform, so nobody juggles spreadsheets, emails and WhatsApp groups again.',
+         'chips': ['Students', 'Faculty', 'Colleges', 'Companies']},
+        {'img': 'slide-graduation.svg', 'tag': 'For students', 'title': 'Build a verified skill profile',
+         'text': 'Add skills, certificates and projects once. Generate an ATS-checked resume, take timed assessments and see your live Eligibility Match % for every drive.',
+         'chips': ['Resume builder', 'ATS score', 'Assessments']},
+        {'img': 'slide-assistant.svg', 'tag': 'For faculty', 'title': 'Mentor the students who need it',
+         'text': 'Open 1-on-1 and group slots, run custom tests, answer doubts and message mentees — with everyone’s progress in one view.',
+         'chips': ['Mentor slots', 'Custom tests', 'Doubts']},
+        {'img': 'slide-growth.svg', 'tag': 'For colleges', 'title': 'Run placements end to end',
+         'text': 'Announce drives with eligibility rules, verify resumes, approve or reject company visit requests and track readiness across every student.',
+         'chips': ['Drives', 'Approvals', 'Readiness']},
+        {'img': 'slide-company.svg', 'tag': 'For companies', 'title': 'Hire on real performance',
+         'text': 'Post a job drive, browse the college list to see how many students qualify on CGPA, branch, skills and assessment scores, then request a campus visit.',
+         'chips': ['Job drive post', 'College list', 'Eligibility']},
+        {'img': 'slide-interview.svg', 'tag': 'Interview to offer', 'title': 'Every interview, on the record',
+         'text': 'Schedule rounds, record each candidate’s result with remarks or the reason they were not selected, and get a hiring report for every campus.',
+         'chips': ['Schedules', 'Remarks', 'Hiring reports']},
+      ] %}
+      <div class="sb-show-track">
+        {% for s in slides %}
+        <article class="sb-slide{% if loop.first %} is-active{% endif %}" data-index="{{ loop.index0 }}" aria-label="Slide {{ loop.index }} of {{ slides|length }}">
+          <div class="sb-slide-copy">
+            <div class="sb-slide-count"><span>{{ '%02d' % loop.index }}</span> / {{ '%02d' % slides|length }}</div>
+            <div class="sb-slide-tag">{{ s.tag }}</div>
+            <h2 class="sb-slide-title">{{ s.title }}</h2>
+            <p class="sb-slide-text">{{ s.text }}</p>
+            <div class="sb-slide-chips">
+              {% for c in s.chips %}<span style="--c:{{ loop.index0 }}">{{ c }}</span>{% endfor %}
+            </div>
+          </div>
+          <div class="sb-slide-media">
+            <div class="sb-slide-frame">
+              {# Drop a real photo at static/img/slides/<same name>.jpg (e.g. slide-teamwork.jpg) and it replaces the illustration automatically #}
+              {% set photo = s.img.replace('.svg', '.jpg') %}
+              <img src="{{ url_for('static', filename=('img/slides/' + photo) if photo in slide_photos else ('img/' + s.img)) }}"
+                   alt="{{ s.title }}"{% if not loop.first %} loading="lazy"{% endif %}>
+              <div class="sb-slide-shine"></div>
+            </div>
+            <div class="sb-float-badge sb-float-badge-a"><i class="bi bi-graph-up-arrow"></i> Match 87%</div>
+            <div class="sb-float-badge sb-float-badge-b"><i class="bi bi-patch-check-fill"></i> Verified</div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+
+      <div class="sb-show-controls">
+        <button class="sb-show-arrow" data-dir="-1" aria-label="Previous slide"><i class="bi bi-arrow-left"></i></button>
+        <div class="sb-show-dots">
+          {% for s in slides %}
+          <button class="sb-show-dot{% if loop.first %} is-active{% endif %}" data-go="{{ loop.index0 }}" aria-label="Go to slide {{ loop.index }}"><span></span></button>
+          {% endfor %}
+        </div>
+        <button class="sb-show-arrow" data-dir="1" aria-label="Next slide"><i class="bi bi-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <div class="text-center mt-4 sb-reveal" style="--d:.8s">
+      <a href="{{ url_for('choose_portal') }}" class="btn sb-btn-glow btn-lg" data-transition>
+        Get started <i class="bi bi-arrow-right-short"></i>
+      </a>
+    </div>
+  </div>
+
+  <a href="#portals" class="sb-scroll-cue" aria-label="Scroll down"><span></span></a>
+</section>
+
+{# ------------------------------------------------------------------
+   3. Live numbers
+   ------------------------------------------------------------------ #}
+<section class="sb-l-stats">
+  <div class="container">
+    <div class="row g-3 text-center">
+      {% for label, value, icon in [('Colleges on the platform', stats.colleges, 'bi-buildings-fill'),
+                                    ('Students onboard', stats.students, 'bi-mortarboard-fill'),
+                                    ('Campus drives', stats.drives, 'bi-briefcase-fill'),
+                                    ('Hiring companies', stats.companies, 'bi-building-check')] %}
+      <div class="col-6 col-lg-3">
+        <div class="sb-stat-tile" data-scroll="up" style="--d:{{ loop.index0 * 0.1 }}s">
+          <i class="bi {{ icon }}"></i>
+          <strong data-count="{{ value }}">0</strong>
+          <span>{{ label }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ------------------------------------------------------------------
+   4. Four portals
+   ------------------------------------------------------------------ #}
+<section class="sb-l-section" id="portals">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="sb-l-kicker" data-scroll="up">Four portals, one network</span>
+      <h2 class="sb-l-h2" data-scroll="up" style="--d:.1s">Pick the door that’s yours</h2>
+    </div>
+    <div class="row g-4">
+      {% for role, icon, title, desc, url in [
+          ('student', 'bi-mortarboard-fill', 'Student', 'Profile, resume, assessments and one-click applications.', url_for('login')),
+          ('faculty', 'bi-easel2-fill', 'Faculty', 'Mentor slots, custom tests, doubts and progress.', url_for('faculty_login')),
+          ('college', 'bi-bank2', 'College', 'Drives, eligibility, approvals and placement tracking.', url_for('college_login')),
+          ('company', 'bi-briefcase-fill', 'Company', 'Job drives, college list, interviews and hiring reports.', url_for('company_login'))] %}
+      <div class="col-sm-6 col-lg-3">
+        <a href="{{ url }}" class="sb-l-portal sb-tilt" data-role="{{ role }}" data-scroll="up" style="--d:{{ loop.index0 * 0.12 }}s" data-transition>
+          <div class="sb-l-portal-icon"><i class="bi {{ icon }}"></i></div>
+          <h3>{{ title }}</h3>
+          <p>{{ desc }}</p>
+          <span class="sb-l-portal-go">Enter <i class="bi bi-arrow-right"></i></span>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ------------------------------------------------------------------
+   5. How it works — the line draws itself as you scroll
+   ------------------------------------------------------------------ #}
+<section class="sb-l-section sb-l-how">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="sb-l-kicker" data-scroll="up">How it works</span>
+      <h2 class="sb-l-h2" data-scroll="up" style="--d:.1s">From job post to offer letter</h2>
+    </div>
+    <div class="sb-timeline" id="sbTimeline">
+      <div class="sb-timeline-line"><span></span></div>
+      {% for icon, title, text in [
+          ('bi-megaphone-fill', 'Company posts a job drive', 'Role, package and performance-based eligibility: CGPA, branch, year, skills and minimum assessment score.'),
+          ('bi-buildings-fill', 'Picks colleges from the list', 'Sees how many students at each college qualify, then sends a campus-visit request.'),
+          ('bi-check2-circle', 'College approves the visit', 'The placement cell approves or rejects. Approval publishes the drive to every student instantly.'),
+          ('bi-person-check-fill', 'Students apply with a match %', 'Each student sees exactly which criteria they meet before applying.'),
+          ('bi-clipboard-data-fill', 'Interviews become hiring reports', 'Every round is scheduled and each candidate’s result, remarks and reasons are recorded.')] %}
+      <div class="sb-timeline-item" data-scroll="{{ 'left' if loop.index is odd else 'right' }}">
+        <div class="sb-timeline-dot"><i class="bi {{ icon }}"></i></div>
+        <div class="sb-timeline-card">
+          <span class="sb-timeline-step">Step {{ loop.index }}</span>
+          <h4>{{ title }}</h4>
+          <p>{{ text }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{# ------------------------------------------------------------------
+   6. Feature marquee
+   ------------------------------------------------------------------ #}
+<section class="sb-marquee" aria-label="Features">
+  {% set feats = ['Eligibility Match %', 'ATS resume score', 'Skill assessments', 'Mentor slots', 'Resume verification',
+                  'Company visit approvals', 'Interview schedules', 'Hiring reports', 'Peer wall', 'Help desk', 'Ask UniLinkUp assistant'] %}
+  <div class="sb-marquee-track">
+    {% for _ in range(2) %}{% for f in feats %}<span><i class="bi bi-asterisk"></i>{{ f }}</span>{% endfor %}{% endfor %}
+  </div>
+</section>
+
+{# ------------------------------------------------------------------
+   7. Call to action
+   ------------------------------------------------------------------ #}
+<section class="sb-l-section pb-0">
+  <div class="container">
+    <div class="sb-cta" data-scroll="zoom">
+      <div class="sb-cta-glow"></div>
+      <h2>Ready to link up?</h2>
+      <p>Choose your portal and sign in, or create an account in under a minute.</p>
+      <a href="{{ url_for('choose_portal') }}" class="btn sb-btn-glow btn-lg" data-transition>
+        <i class="bi bi-person-circle"></i> Login / Register
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/landing.js') }}?v={{ ASSET_VERSION }}"></script>
+{% endblock %}

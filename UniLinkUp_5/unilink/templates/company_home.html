@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Company Dashboard — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="sb-company-hero" data-scroll="up">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <div>
+      <div class="small text-uppercase" style="letter-spacing:2px;opacity:.8;">Company portal</div>
+      <h3 class="mb-1">{{ company.name }}</h3>
+      <p>{{ company.industry or 'Recruiter' }}{% if company.location %} · {{ company.location }}{% endif %} · HR: {{ company.hr_name }}</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('company_jobs') }}" class="btn btn-light fw-semibold rounded-pill"><i class="bi bi-plus-lg"></i> Post a job drive</a>
+      <a href="{{ url_for('company_colleges') }}" class="btn btn-outline-light fw-semibold rounded-pill"><i class="bi bi-buildings"></i> Browse colleges</a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mt-2">
+  {% for label, val, icon, cls in [('Open job drives', stats.jobs, 'bi-megaphone-fill', 'k-orange'),
+                                   ('Pending requests', stats.pending, 'bi-hourglass-split', 'k-violet'),
+                                   ('Approved campuses', stats.approved, 'bi-check2-circle', 'k-teal'),
+                                   ('Interviews recorded', stats.interviews, 'bi-clipboard-data-fill', 'k-blue'),
+                                   ('Students selected', stats.selected, 'bi-trophy-fill', 'k-green')] %}
+  <div class="col-6 col-md-4 col-xl">
+    <div class="sb-kpi {{ cls }}" data-scroll="up" style="--d:{{ loop.index0 * 0.07 }}s">
+      <div class="icon"><i class="bi {{ icon }}"></i></div>
+      <div class="label">{{ label }}</div>
+      <div class="value" data-count="{{ val }}">0</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-7">
+    <div class="sb-card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Campus visit requests</h5>
+        <a href="{{ url_for('company_colleges') }}" class="small">Request a visit <i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% if requests %}
+        {% for r in requests %}
+        <div class="sb-item">
+          <div class="d-flex justify-content-between gap-2 flex-wrap">
+            <div>
+              <strong>{{ r.college_name }}</strong><br>
+              <small class="text-muted">{{ r.job_title }} · {{ r.job_type }}{% if r.proposed_date %} · proposed {{ r.proposed_date | fmt_date }}{% endif %}</small>
+            </div>
+            <div class="text-end">
+              <span class="sb-status s-{{ r.status }}">{{ r.status }}</span>
+              {% if r.status == 'pending' %}
+              <form method="POST" action="{{ url_for('withdraw_visit_request', req_id=r.id) }}" class="d-inline">
+                <button class="btn btn-link btn-sm text-muted p-0 ms-2">Withdraw</button>
+              </form>
+              {% endif %}
+            </div>
+          </div>
+          {% if r.college_note %}<div class="small mt-2 p-2 rounded-3" style="background:#f6fbfa;"><i class="bi bi-chat-left-quote text-muted"></i> <em>{{ r.college_note }}</em></div>{% endif %}
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-send"></i>No requests yet. Post a job drive, then pick colleges from the College List.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="sb-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Upcoming interviews</h5>
+        <a href="{{ url_for('company_interviews') }}" class="small">Schedule <i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% if upcoming %}
+        {% for s in upcoming %}
+        <div class="d-flex gap-3 align-items-center mb-3">
+          <div class="sb-date-tile"><div class="d">{{ s.interview_date | fmt_date('%d') }}</div><div class="m">{{ s.interview_date | fmt_date('%b') }}</div></div>
+          <div>
+            <strong>{{ s.round_name }}</strong><br>
+            <small class="text-muted">{{ s.college_name }} · {{ s.job_title }}{% if s.start_time %} · {{ s.start_time }}{% endif %}</small>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="sb-empty py-3"><i class="bi bi-calendar2-week"></i>Nothing scheduled.</div>
+      {% endif %}
+    </div>
+
+    <div class="sb-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Your job drives</h5>
+        <a href="{{ url_for('company_jobs') }}" class="small">Manage <i class="bi bi-arrow-right"></i></a>
+      </div>
+      {% for j in jobs %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color:var(--sb-border)!important;">
+          <div><strong class="small">{{ j.title }}</strong><br><small class="text-muted">{{ j.job_type }} · {{ j.package_lpa or '—' }}</small></div>
+          <span class="sb-status s-{{ j.status }}">{{ j.status }}</span>
+        </div>
+      {% else %}
+        <div class="sb-empty py-3"><i class="bi bi-megaphone"></i>No job drives yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

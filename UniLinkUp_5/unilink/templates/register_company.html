@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Company Registration — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-auth-wrap sb-auth-wide" data-role="company">
+  <div class="sb-auth-panel">
+    <img src="{{ url_for('static', filename='img/slide-company.svg') }}" alt="Company hiring illustration">
+    <h3>Bring your hiring to campus</h3>
+    <p>One account for your whole recruitment team: job drive posts, college list, interview schedules and hiring reports.</p>
+  </div>
+  <div class="sb-auth-form-side">
+    {% set auth_role, auth_mode = 'company', 'register' %}{% include '_auth_switch.html' %}
+    <h3 class="mb-1">Company Registration</h3>
+    <p class="text-muted small mb-4">Already registered? <a href="{{ url_for('company_login') }}" data-transition>Login</a>.</p>
+    <form method="POST" data-loading="Creating your company account...">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Company Name <span class="text-danger">*</span></label>
+          <input type="text" name="name" class="form-control" required value="{{ form.get('name','') }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Industry</label>
+          <input type="text" name="industry" class="form-control" placeholder="e.g. IT Services" value="{{ form.get('industry','') }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">HR / Recruiter Name <span class="text-danger">*</span></label>
+          <input type="text" name="hr_name" class="form-control" required value="{{ form.get('hr_name','') }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Phone</label>
+          <input type="tel" name="phone" class="form-control" value="{{ form.get('phone','') }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Website</label>
+          <input type="url" name="website" class="form-control" placeholder="https://" value="{{ form.get('website','') }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Head Office Location</label>
+          <input type="text" name="location" class="form-control" placeholder="e.g. Bengaluru" value="{{ form.get('location','') }}">
+        </div>
+        <div class="col-12">
+          <label class="form-label">About the Company</label>
+          <textarea name="about" class="form-control" rows="2">{{ form.get('about','') }}</textarea>
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">Official Mail ID <span class="text-danger">*</span></label>
+          <input type="email" name="email" class="form-control" required placeholder="hr@company.com" value="{{ form.get('email','') }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Password <span class="text-danger">*</span></label>
+          <input type="password" name="password" class="form-control" required minlength="6">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
+          <input type="password" name="confirm_password" class="form-control" required minlength="6">
+        </div>
+      </div>
+      <button type="submit" class="btn sb-btn-primary w-100 mt-4"><i class="bi bi-building-add"></i> Register Company</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

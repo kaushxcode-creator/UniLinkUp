@@ -1,0 +1,26 @@
+<svg viewBox="0 0 500 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Person unlocking a secure shield, representing signing in">
+  <circle cx="250" cy="200" r="190" fill="#ffffff" opacity="0.06"/>
+  <circle cx="250" cy="200" r="140" fill="#ffffff" opacity="0.05"/>
+
+  <!-- shield -->
+  <path d="M250 90 L340 125 C340 210 305 275 250 305 C195 275 160 210 160 125 Z" fill="#123a3f" stroke="#6fe0c4" stroke-width="4"/>
+  <path d="M250 108 L322 137 C322 208 293 262 250 288 C207 262 178 208 178 137 Z" fill="#14b391" opacity="0.18"/>
+
+  <!-- lock -->
+  <rect x="222" y="175" width="56" height="46" rx="10" fill="#e8823c"/>
+  <path d="M234 175 v-16 a16 16 0 0 1 32 0 v16" fill="none" stroke="#e8823c" stroke-width="8"/>
+  <circle cx="250" cy="196" r="7" fill="#123a3f"/>
+  <rect x="247" y="200" width="6" height="12" fill="#123a3f"/>
+
+  <!-- floating checkmarks / stars -->
+  <circle cx="120" cy="150" r="6" fill="#6fe0c4"/>
+  <circle cx="370" cy="290" r="7" fill="#e8823c"/>
+  <circle cx="95" cy="300" r="5" fill="#14b391"/>
+  <path d="M355 130 l8 8 16 -18" stroke="#6fe0c4" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- small figure walking toward it -->
+  <g>
+    <circle cx="120" cy="330" r="20" fill="#f2c29b"/>
+    <path d="M95 385 C95 355 100 345 120 345 C140 345 145 355 145 385 Z" fill="#e8823c"/>
+  </g>
+</svg>

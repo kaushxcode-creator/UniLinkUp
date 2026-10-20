@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% set tab = active_tab or 'company' %}
+{% block title %}{{ 'Interviewer' if tab == 'interviewer' else 'Company' }} Login — UniLinkUp{% endblock %}
+{% block content %}
+{#
+  One page, two logins:
+    Company     -> POST /company/login               (HR / recruiter account)
+    Interviewer -> POST /company/interviewer/login   (accounts created by the company's HR)
+#}
+<div class="sb-auth-wrap sb-dual-login" data-role="{{ tab }}" id="sbDualLogin" data-tab="{{ tab }}">
+  <div class="sb-auth-panel">
+    <div class="sb-dual-panel" data-for="company">
+      <img src="{{ url_for('static', filename='img/slide-company.svg') }}" alt="Company hiring illustration">
+      <h3>Hire from campus, on performance</h3>
+      <p>Post job drives, see how many students at each college meet your criteria, request campus visits, manage your interviewers and keep a hiring report for every candidate.</p>
+      <div class="alert alert-light small mb-0">
+        <strong><i class="bi bi-magic"></i> Just want to look around?</strong><br>
+        Demo login &middot; ID: <code>hr@nimbustech.com</code> &middot; Password: <code>company123</code>
+        <button type="button" class="btn btn-sm btn-outline-dark d-block w-100 mt-2" data-demo="company">Use Demo Account</button>
+      </div>
+    </div>
+    <div class="sb-dual-panel" data-for="interviewer">
+      <img src="{{ url_for('static', filename='img/slide-interview.svg') }}" alt="Interviewer illustration">
+      <h3>Interview fairly, without bias</h3>
+      <p>Run mock interviews and campus rounds. You see each student's name, skills, branch, year and projects — never their college, CGPA, roll number, contact details or photo.</p>
+      <div class="alert alert-light small mb-0">
+        <strong><i class="bi bi-magic"></i> Just want to look around?</strong><br>
+        Demo login &middot; ID: <code>arjun@nimbustech.com</code> &middot; Password: <code>interviewer123</code>
+        <button type="button" class="btn btn-sm btn-outline-dark d-block w-100 mt-2" data-demo="interviewer">Use Demo Account</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sb-auth-form-side">
+    <div class="sb-auth-role">
+      <span class="sb-auth-role-badge"><i class="bi bi-briefcase-fill"></i> Company portal</span>
+      <a href="{{ url_for('choose_portal') }}" class="sb-auth-change" data-transition><i class="bi bi-arrow-left"></i> Change portal</a>
+    </div>
+
+    <div class="sb-dual-tabs" role="tablist" aria-label="Choose login type">
+      <span class="sb-dual-tabs-pill"></span>
+      <button type="button" role="tab" data-tab="company" data-url="{{ url_for('company_login') }}" aria-selected="{{ 'true' if tab == 'company' else 'false' }}">
+        <i class="bi bi-building"></i><span><strong>Company</strong><small>HR &amp; recruiters</small></span>
+      </button>
+      <button type="button" role="tab" data-tab="interviewer" data-url="{{ url_for('interviewer_login') }}" aria-selected="{{ 'true' if tab == 'interviewer' else 'false' }}">
+        <i class="bi bi-person-badge"></i><span><strong>Interviewer</strong><small>Panel members</small></span>
+      </button>
+    </div>
+
+    <div class="sb-dual-forms">
+      {# ---------------- Company login ---------------- #}
+      <section class="sb-dual-form" data-for="company" role="tabpanel">
+        <h3 class="mb-1">Company Login</h3>
+        <p class="text-muted small mb-4">New recruiter? <a href="{{ url_for('company_register') }}" data-transition>Register your company</a>.</p>
+        <form method="POST" action="{{ url_for('company_login') }}" data-loading="Logging you in...">
+          <div class="mb-3">
+            <label class="form-label" for="cEmail">Official Mail ID</label>
+            <input type="email" id="cEmail" name="email" class="form-control" required placeholder="hr@company.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="cPass">Password</label>
+            <input type="password" id="cPass" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn sb-btn-primary w-100 mt-2"><i class="bi bi-box-arrow-in-right"></i> Login as Company</button>
+        </form>
+      </section>
+
+      {# ---------------- Interviewer login ---------------- #}
+      <section class="sb-dual-form" data-for="interviewer" role="tabpanel">
+        <h3 class="mb-1">Interviewer Login</h3>
+        <p class="text-muted small mb-4">Your account is created by your company's HR from <em>Company portal → Interviewers</em>.</p>
+        <form method="POST" action="{{ url_for('interviewer_login') }}" data-loading="Logging you in...">
+          <div class="mb-3">
+            <label class="form-label" for="iEmail">Work Mail ID</label>
+            <input type="email" id="iEmail" name="email" class="form-control" required placeholder="you@company.com">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="iPass">Password</label>
+            <input type="password" id="iPass" name="password" class="form-control" required>
+          </div>
+          <button type="submit" class="btn sb-btn-primary w-100 mt-2"><i class="bi bi-box-arrow-in-right"></i> Login as Interviewer</button>
+        </form>
+        <p class="small text-muted mt-3 mb-0"><i class="bi bi-eye-slash"></i> Blind mode is always on for interviewers.</p>
+      </section>
+    </div>
+
+    <p class="text-center mt-4 mb-0 small text-muted">
+      Student? <a href="{{ url_for('login') }}" data-transition>Student Login</a> &middot;
+      Placement cell? <a href="{{ url_for('college_login') }}" data-transition>College Login</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var wrap = document.getElementById('sbDualLogin');
+  var tabs = wrap.querySelectorAll('.sb-dual-tabs [data-tab]');
+  function show(tab, push) {
+    wrap.setAttribute('data-tab', tab);
+    wrap.setAttribute('data-role', tab);
+    tabs.forEach(function (t) { t.setAttribute('aria-selected', t.dataset.tab === tab ? 'true' : 'false'); });
+    var active = wrap.querySelector('.sb-dual-tabs [data-tab="' + tab + '"]');
+    document.title = (tab === 'interviewer' ? 'Interviewer' : 'Company') + ' Login — UniLinkUp';
+    if (push && active && window.history && history.replaceState) history.replaceState(null, '', active.dataset.url);
+    var first = wrap.querySelector('.sb-dual-form[data-for="' + tab + '"] input[type=email]');
+    if (first && push) setTimeout(function () { first.focus(); }, 350);
+  }
+  tabs.forEach(function (t) { t.addEventListener('click', function () { show(t.dataset.tab, true); }); });
+  wrap.querySelectorAll('[data-demo]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var who = b.dataset.demo;
+      show(who, true);
+      if (who === 'company') { cEmail.value = 'hr@nimbustech.com'; cPass.value = 'company123'; }
+      else { iEmail.value = 'arjun@nimbustech.com'; iPass.value = 'interviewer123'; }
+    });
+  });
+  show(wrap.dataset.tab, false);
+})();
+</script>
+{% endblock %}

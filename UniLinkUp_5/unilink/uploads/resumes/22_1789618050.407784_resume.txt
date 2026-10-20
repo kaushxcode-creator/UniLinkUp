@@ -1,0 +1,23 @@
+Demo Student
+student@reva.edu.in
+CSE | Computer Science | 4th Year | REVA University
+
+SUMMARY
+Aspiring backend engineer with a love for clean APIs.
+
+SKILLS
+Python, SQL, Git
+
+EDUCATION
+REVA University — CSE (Computer Science), CGPA 7.8
+
+EXPERIENCE
+Backend Intern — Acme Corp (May 2025 - Jul 2025)
+Built REST APIs in Flask.
+
+PROJECTS
+UniLinkUp Clone — Python, Flask, SQLite (2026)
+A campus placement portal.
+
+ACHIEVEMENTS
+Won college hackathon

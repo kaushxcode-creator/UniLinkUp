@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}{{ other_name }} — Messages — UniLinkUp{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('ask_faculty') if my_role == 'student' else url_for('faculty_doubts') }}" class="small d-inline-block mt-3 mb-2">
+  <i class="bi bi-arrow-left"></i> Back
+</a>
+<h3 class="mb-4">{{ other_name }}</h3>
+
+<div class="sb-card">
+  <div class="d-flex flex-column gap-2 mb-3" style="max-height: 420px; overflow-y: auto;">
+    {% if thread %}
+      {% for m in thread %}
+        <div class="d-flex {{ 'justify-content-end' if m.sender_role == my_role else 'justify-content-start' }}">
+          <div class="p-2 px-3 rounded-4" style="max-width: 75%; {{ 'background: var(--sb-teal); color: #fff;' if m.sender_role == my_role else 'background: var(--sb-bg); border: 1px solid var(--sb-border);' }}">
+            <div class="small">{{ m.body }}</div>
+            <div class="small mt-1" style="opacity: .7; font-size: .7rem;">{{ m.created_at[:16] | replace('T', ' ') }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted small mb-0">No messages yet — say hello below.</p>
+    {% endif %}
+  </div>
+
+  <form method="POST" class="d-flex gap-2">
+    <input type="text" name="body" class="form-control" placeholder="Type a message..." required autofocus>
+    <button type="submit" class="btn sb-btn-primary flex-shrink-0"><i class="bi bi-send-fill"></i></button>
+  </form>
+</div>
+
+{% endblock %}

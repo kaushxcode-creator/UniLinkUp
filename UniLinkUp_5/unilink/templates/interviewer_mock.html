@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Mock Interviews — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-page-head">
+  <div>
+    <h3><i class="bi bi-mic-fill" style="color:#0f7c8c"></i> Mock Interviews</h3>
+    <p>Open time slots, see who booked them (blind profile) and send written feedback after each session.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="sb-card">
+      <h5 class="mb-3">Open new slots</h5>
+      <form method="POST">
+        <div class="row g-2">
+          <div class="col-12"><label class="form-label small">Date <span class="text-danger">*</span></label><input type="date" name="slot_date" min="{{ today }}" class="form-control" required></div>
+          <div class="col-6"><label class="form-label small">From <span class="text-danger">*</span></label><input type="time" name="start_time" class="form-control" required></div>
+          <div class="col-6"><label class="form-label small">To</label><input type="time" name="end_time" class="form-control"></div>
+          <div class="col-12">
+            <label class="form-label small">Focus</label>
+            <select name="focus" class="form-select">{% for f in focus_options %}<option>{{ f }}</option>{% endfor %}</select>
+          </div>
+          <div class="col-12"><label class="form-label small">Topics you'll cover</label><input name="topics" class="form-control" placeholder="e.g. Arrays, SQL joins, OOP"></div>
+          <div class="col-6">
+            <label class="form-label small">Mode</label>
+            <select name="mode" class="form-select"><option>Online</option><option>In person</option></select>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Repeat weekly</label>
+            <select name="repeat" class="form-select"><option value="1">Just once</option><option value="2">2 weeks</option><option value="3">3 weeks</option><option value="4">4 weeks</option></select>
+          </div>
+          <div class="col-12"><label class="form-label small">Meeting link</label><input type="url" name="meeting_link" class="form-control" placeholder="https://"></div>
+          <div class="col-12"><label class="form-label small">Venue (in person)</label><input name="venue" class="form-control"></div>
+        </div>
+        <button class="btn sb-btn-primary w-100 mt-3"><i class="bi bi-calendar-plus"></i> Publish slot</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="sb-card mb-4">
+      <h5 class="mb-3">Booked <span class="badge rounded-pill text-bg-light">{{ groups.booked|length }}</span></h5>
+      {% for m in groups.booked %}
+        {% set p = profiles.get(m.id) %}
+        <div class="sb-item">
+          <div class="d-flex justify-content-between gap-2 flex-wrap">
+            <div class="d-flex gap-3 align-items-center">
+              <div class="sb-date-tile"><div class="d">{{ m.slot_date | fmt_date('%d') }}</div><div class="m">{{ m.slot_date | fmt_date('%b') }}</div></div>
+              <div><strong>{{ p.name if p else 'Student' }}</strong> <span class="sb-focus f-{{ m.focus|lower }}">{{ m.focus }}</span><br>
+                <small class="text-muted">{{ m.start_time }}{% if m.end_time %}–{{ m.end_time }}{% endif %} · for <strong>{{ m.target_role }}</strong>{% if m.student_topics %} · wants: {{ m.student_topics }}{% endif %}</small></div>
+            </div>
+            <div class="d-flex gap-1 align-items-start">
+              <a href="{{ url_for('interviewer_mock_session', slot_id=m.id) }}" class="btn btn-sm sb-btn-primary"><i class="bi bi-play-circle"></i> Session &amp; feedback</a>
+              <button class="btn btn-sm btn-outline-danger rounded-pill" data-bs-toggle="collapse" data-bs-target="#cx{{ m.id }}" type="button">Cancel</button>
+            </div>
+          </div>
+          <div class="collapse" id="cx{{ m.id }}">
+            <form method="POST" action="{{ url_for('interviewer_cancel_slot', slot_id=m.id) }}" class="d-flex gap-2 mt-2">
+              <input name="reason" class="form-control form-control-sm" required placeholder="Reason shown to the student">
+              <button class="btn btn-sm btn-danger rounded-pill">Cancel slot</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div class="sb-empty py-3"><i class="bi bi-calendar2"></i>No bookings right now.</div>
+      {% endfor %}
+    </div>
+
+    <div class="sb-card mb-4">
+      <h5 class="mb-3">Open — waiting for students <span class="badge rounded-pill text-bg-light">{{ groups.open|length }}</span></h5>
+      {% for m in groups.open %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom flex-wrap gap-2" style="border-color:var(--sb-border)!important;">
+          <div><strong class="small">{{ m.slot_date | fmt_date('%a %d %b') }} · {{ m.start_time }}{% if m.end_time %}–{{ m.end_time }}{% endif %}</strong>
+            <span class="sb-focus f-{{ m.focus|lower }} ms-1">{{ m.focus }}</span><br>
+            <small class="text-muted">{{ m.mode }}{% if m.topics %} · {{ m.topics }}{% endif %}</small></div>
+          <form method="POST" action="{{ url_for('interviewer_cancel_slot', slot_id=m.id) }}"><button class="btn btn-sm btn-link text-danger">Remove</button></form>
+        </div>
+      {% else %}
+        <p class="small text-muted mb-0">No open slots.</p>
+      {% endfor %}
+    </div>
+
+    <div class="sb-card">
+      <h5 class="mb-3">History</h5>
+      {% for m in groups.past %}
+        {% set p = profiles.get(m.id) %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom flex-wrap gap-2" style="border-color:var(--sb-border)!important;">
+          <div class="small"><strong>{{ m.slot_date | fmt_date }}</strong> · {{ m.focus }} · {{ p.name if p else 'No booking' }}
+            {% if m.cancel_reason %}<span class="text-muted">— {{ m.cancel_reason }}</span>{% endif %}</div>
+          <div class="d-flex gap-2 align-items-center">
+            {% if m.verdict %}<span class="small text-muted">{{ m.verdict }}</span>{% endif %}
+            <span class="sb-status s-{{ 'closed' if m.status == 'open' else m.status }}">{{ 'expired' if m.status == 'open' else m.status }}</span>
+            {% if m.status == 'completed' %}<a href="{{ url_for('interviewer_mock_session', slot_id=m.id) }}" class="small">View</a>{% endif %}
+          </div>
+        </div>
+      {% else %}
+        <p class="small text-muted mb-0">Nothing yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

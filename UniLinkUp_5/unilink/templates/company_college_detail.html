@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}{{ college.name }} — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-page-head">
+  <div>
+    <a href="{{ url_for('company_colleges', job=job.id if job else None) }}" class="small text-muted"><i class="bi bi-arrow-left"></i> College List</a>
+    <h3 class="mt-1">{{ college.name }}</h3>
+    <p>{% if college.established_year %}Established {{ college.established_year }} · {% endif %}{{ perf.students }} students on UniLinkUp</p>
+  </div>
+  {% if jobs %}
+  <form method="GET">
+    <select name="job" class="form-select" onchange="this.form.submit()">
+      {% for j in jobs %}<option value="{{ j.id }}" {{ 'selected' if job and j.id == job.id }}>{{ j.title }}</option>{% endfor %}
+    </select>
+  </form>
+  {% endif %}
+</div>
+
+<div class="row g-3">
+  {% for label, val, icon, cls in [('Students', perf.students, 'bi-people-fill', 'k-blue'),
+                                   ('Eligible for this job', perf.eligible if perf.eligible is not none else 0, 'bi-person-check-fill', 'k-teal'),
+                                   ('Average CGPA', perf.avg_cgpa or 0, 'bi-mortarboard-fill', 'k-orange'),
+                                   ('Avg assessment %', perf.avg_assessment or 0, 'bi-clipboard2-check-fill', 'k-violet')] %}
+  <div class="col-6 col-lg-3">
+    <div class="sb-kpi {{ cls }}" data-scroll="up" style="--d:{{ loop.index0 * 0.07 }}s">
+      <div class="icon"><i class="bi {{ icon }}"></i></div>
+      <div class="label">{{ label }}</div>
+      <div class="value" data-count="{{ val }}">0</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-4">
+    <div class="sb-card mb-4">
+      <h5 class="mb-3">Eligibility by branch</h5>
+      {% for dept, d in by_dept.items() %}
+        <div class="small d-flex justify-content-between"><span>{{ dept }}</span><span><strong>{{ d.eligible }}</strong> / {{ d.total }}</span></div>
+        <div class="sb-meter mb-3" style="--w:{{ (d.eligible * 100 / d.total)|round }}%"><span></span></div>
+      {% else %}
+        <p class="text-muted small mb-0">No students registered from this college yet.</p>
+      {% endfor %}
+    </div>
+
+    <div class="sb-card">
+      <h5 class="mb-3">Your requests here</h5>
+      {% for r in reqs %}
+        <div class="d-flex justify-content-between small py-1"><span>{{ r.job_title }}</span><span class="sb-status s-{{ r.status }}">{{ r.status }}</span></div>
+        {% if r.college_note %}<div class="small text-muted fst-italic mb-2">“{{ r.college_note }}”</div>{% endif %}
+      {% else %}
+        <p class="small text-muted">No requests sent yet.</p>
+      {% endfor %}
+      {% if job %}
+      <hr>
+      <form method="POST" action="{{ url_for('request_college_visit', college_id=college.id) }}">
+        <input type="hidden" name="job_post_id" value="{{ job.id }}">
+        <input type="hidden" name="next" value="{{ request.full_path }}">
+        <label class="form-label small">Proposed visit date for <strong>{{ job.title }}</strong></label>
+        <input type="date" name="proposed_date" min="{{ today }}" class="form-control mb-2">
+        <textarea name="message" rows="2" class="form-control mb-2" placeholder="Message to the placement cell"></textarea>
+        <button class="btn sb-btn-primary w-100"><i class="bi bi-send-fill"></i> Request campus visit</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="sb-card">
+      <h5 class="mb-1">Student performance</h5>
+      {% if can_see_students %}
+        <p class="small text-muted">Shared because {{ college.name }} approved your campus visit.</p>
+        <div class="table-responsive">
+          <table class="sb-table">
+            <thead><tr><th>Student</th><th>Branch / Year</th><th>CGPA</th><th>Assessment</th><th>Match</th><th>Eligible</th></tr></thead>
+            <tbody>
+            {% for x in students %}
+              <tr>
+                <td><strong>{{ x.s.name }}</strong><br><small class="text-muted">{{ x.s.srn }}</small></td>
+                <td>{{ x.s.course }}<br><small class="text-muted">{{ x.s.year }}</small></td>
+                <td>{{ x.s.cgpa }}</td>
+                <td>{{ (x.assess ~ '%') if x.assess is not none else '—' }}</td>
+                <td style="min-width:110px">{% if x.match %}<div class="sb-meter" style="--w:{{ x.match.percent }}%"><span></span></div><small>{{ x.match.percent }}%</small>{% endif %}</td>
+                <td>{% if x.match and x.match.eligible %}<span class="sb-status s-approved">Yes</span>{% else %}<span class="sb-status s-rejected">No</span>{% endif %}</td>
+              </tr>
+            {% else %}
+              <tr><td colspan="6" class="text-muted">No students yet.</td></tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-shield-lock"></i>
+          Individual student records are shared once {{ college.name }} approves a campus visit from you.<br>
+          Until then you see the totals above.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

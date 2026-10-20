@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% block title %}Notify Students — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Notify Students</h3>
+<p class="text-muted mb-4">Send a custom notification to whichever students you pick — filter by department or course, or just pick names one by one. It shows up under their bell icon.</p>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="sb-card">
+      <h5 class="mb-3"><i class="bi bi-megaphone-fill"></i> Compose a notification</h5>
+      <form method="POST" id="sbNotifyForm">
+        <div class="mb-2">
+          <label class="form-label small">Title</label>
+          <input type="text" name="title" class="form-control" placeholder="e.g. Placement drive update" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small">Message</label>
+          <textarea name="message" class="form-control" rows="4" placeholder="Whatever you want to tell your students..." required></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+          <label class="form-label small mb-0">Recipients</label>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm sb-btn-outline" id="sbSelectAll">Select visible</button>
+            <button type="button" class="btn btn-sm sb-btn-outline" id="sbDeselectAll">Deselect visible</button>
+          </div>
+        </div>
+
+        {% if students %}
+          <div class="d-flex gap-2 flex-wrap mb-2">
+            <select id="sbFilterDept" class="form-select form-select-sm" style="width: auto;">
+              <option value="">All Departments</option>
+              {% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+            </select>
+            <select id="sbFilterCourse" class="form-select form-select-sm" style="width: auto;">
+              <option value="">All Courses</option>
+              {% for c in courses %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+            </select>
+          </div>
+
+          <div class="border rounded-4 p-2" style="max-height: 320px; overflow-y: auto; border-color: var(--sb-border) !important;">
+            {% for dept, dept_group in students|groupby('department') %}
+              <div class="sb-notify-dept-group" data-department="{{ dept }}">
+                <div class="d-flex align-items-center justify-content-between px-1 pt-2 pb-1">
+                  <span class="fw-semibold small">{{ dept }}</span>
+                  <button type="button" class="btn btn-sm sb-btn-outline sb-select-group" style="padding:.15rem .6rem; font-size:.72rem;">
+                    Select department
+                  </button>
+                </div>
+                {% for course, course_group in dept_group|groupby('course') %}
+                  <div class="sb-notify-course-group" data-course="{{ course }}">
+                    <div class="text-muted small px-1" style="font-size:.72rem; text-transform: uppercase;">{{ course }}</div>
+                    {% for s in course_group %}
+                      <div class="form-check d-flex align-items-center justify-content-between py-1 px-2">
+                        <span>
+                          <input class="form-check-input sb-student-check" type="checkbox" name="student_ids" value="{{ s.id }}" id="stu-{{ s.id }}" checked>
+                          <label class="form-check-label small" for="stu-{{ s.id }}">{{ s.name }}</label>
+                        </span>
+                        <small class="text-muted">{{ s.email }}</small>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn sb-btn-primary w-100 mt-3">Send Notification</button>
+        {% else %}
+          <p class="text-muted">No students registered under your college yet.</p>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="sb-card">
+      <h5 class="mb-3">Previously sent</h5>
+      {% if sent %}
+        <div class="d-flex flex-column gap-2">
+          {% for n in sent %}
+            <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <strong>{{ n.title }}</strong>
+                <span class="badge {{ 'sb-badge-open' if n.kind == 'drive_reminder' else 'sb-eligibility-overview' }}">
+                  {{ 'Drive reminder' if n.kind == 'drive_reminder' else 'Manual' }}
+                </span>
+              </div>
+              <p class="mb-1 mt-1 small text-muted">{{ n.message }}</p>
+              <small class="text-muted">
+                {{ n.created_at[:16] }} · sent to {{ n.recipient_count }} student(s) · read by {{ n.read_count }}
+              </small>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">Nothing sent yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var deptSel = document.getElementById('sbFilterDept');
+    var courseSel = document.getElementById('sbFilterCourse');
+
+    function visibleChecks() {
+      return Array.prototype.filter.call(
+        document.querySelectorAll('.sb-student-check'),
+        function (c) { return c.closest('.sb-notify-course-group') && !c.closest('.sb-notify-course-group').hidden
+                              && !c.closest('.sb-notify-dept-group').hidden; }
+      );
+    }
+
+    function applyFilter() {
+      if (!deptSel || !courseSel) return;
+      var dept = deptSel.value, course = courseSel.value;
+      document.querySelectorAll('.sb-notify-dept-group').forEach(function (deptEl) {
+        var deptMatches = !dept || deptEl.dataset.department === dept;
+        var anyVisible = false;
+        deptEl.querySelectorAll('.sb-notify-course-group').forEach(function (courseEl) {
+          var visible = deptMatches && (!course || courseEl.dataset.course === course);
+          courseEl.hidden = !visible;
+          if (visible) anyVisible = true;
+        });
+        deptEl.hidden = !anyVisible;
+      });
+    }
+
+    deptSel && deptSel.addEventListener('change', applyFilter);
+    courseSel && courseSel.addEventListener('change', applyFilter);
+
+    var selectAll = document.getElementById('sbSelectAll');
+    var deselectAll = document.getElementById('sbDeselectAll');
+    selectAll && selectAll.addEventListener('click', function () {
+      visibleChecks().forEach(function (c) { c.checked = true; });
+    });
+    deselectAll && deselectAll.addEventListener('click', function () {
+      visibleChecks().forEach(function (c) { c.checked = false; });
+    });
+
+    document.querySelectorAll('.sb-select-group').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var group = btn.closest('.sb-notify-dept-group');
+        var checks = group.querySelectorAll('.sb-student-check');
+        var allChecked = Array.prototype.every.call(checks, function (c) { return c.checked; });
+        checks.forEach(function (c) { c.checked = !allChecked; });
+      });
+    });
+  })();
+</script>
+
+{% endblock %}

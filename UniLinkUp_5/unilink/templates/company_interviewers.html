@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Interviewers — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-page-head">
+  <div>
+    <h3><i class="bi bi-person-badge-fill" style="color:#0f7c8c"></i> Interviewers</h3>
+    <p>Create logins for your interview panel. They sign in from the <strong>Interviewer</strong> tab of the Company login page and only see blind student profiles.</p>
+  </div>
+  <a href="{{ url_for('interviewer_login') }}" class="btn sb-btn-outline" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right"></i> Interviewer login page</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="sb-card">
+      <h5 class="mb-3">Add an interviewer</h5>
+      <form method="POST">
+        <div class="mb-2"><label class="form-label small">Full name <span class="text-danger">*</span></label><input name="name" class="form-control" required></div>
+        <div class="mb-2"><label class="form-label small">Work email <span class="text-danger">*</span></label><input type="email" name="email" class="form-control" required placeholder="name@company.com"></div>
+        <div class="mb-2"><label class="form-label small">Designation</label><input name="designation" class="form-control" placeholder="e.g. Senior Engineer"></div>
+        <div class="mb-2"><label class="form-label small">Interviews on</label><input name="expertise" class="form-control" placeholder="e.g. Python, SQL, HR"></div>
+        <div class="mb-2"><label class="form-label small">Temporary password <span class="text-danger">*</span></label><input type="text" name="password" class="form-control" required minlength="6" autocomplete="new-password"></div>
+        <button class="btn sb-btn-primary w-100 mt-2"><i class="bi bi-person-plus-fill"></i> Create interviewer login</button>
+      </form>
+      <div class="mt-4 p-3 rounded-4 small" style="background:#e0f4f6;">
+        <strong><i class="bi bi-eye-slash-fill"></i> What interviewers can see</strong>
+        <ul class="mb-0 mt-1 ps-3">
+          <li>Name, skills, branch &amp; year</li>
+          <li>Projects, certifications, achievements, assessment score</li>
+          <li class="text-muted">Not shown: college, CGPA, SRN, email, phone, photo</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="sb-card">
+      <h5 class="mb-3">Your panel <span class="badge rounded-pill text-bg-light">{{ interviewers|length }}</span></h5>
+      {% for i in interviewers %}
+      <div class="sb-item {{ '' if i.is_active else 'opacity-75' }}" data-scroll="up" style="--d:{{ [loop.index0, 6]|min * 0.05 }}s">
+        <div class="d-flex justify-content-between gap-2 flex-wrap">
+          <div class="d-flex gap-3 align-items-center">
+            <div class="sb-blind-avatar">{{ i.name[:1] }}</div>
+            <div>
+              <strong>{{ i.name }}</strong> {% if not i.is_active %}<span class="sb-status s-closed">inactive</span>{% endif %}<br>
+              <small class="text-muted">{{ i.designation or 'Interviewer' }} · {{ i.email }}</small>
+              {% if i.expertise %}<div>{% for e in i.expertise.split(',') %}<span class="sb-skill">{{ e.strip() }}</span>{% endfor %}</div>{% endif %}
+            </div>
+          </div>
+          <div class="d-flex gap-1 align-items-start">
+            <button class="btn btn-sm sb-btn-outline" type="button" data-bs-toggle="collapse" data-bs-target="#pw{{ i.id }}"><i class="bi bi-key"></i> Password</button>
+            <form method="POST" action="{{ url_for('toggle_interviewer', iid=i.id) }}">
+              <button class="btn btn-sm {{ 'btn-outline-danger' if i.is_active else 'btn-outline-success' }} rounded-pill">{{ 'Deactivate' if i.is_active else 'Reactivate' }}</button>
+            </form>
+          </div>
+        </div>
+        <div class="small mt-2">
+          <span class="sb-chip"><i class="bi bi-mic"></i> {{ i.mocks_done }} mock{{ 's' if i.mocks_done != 1 }} done</span>
+          <span class="sb-chip"><i class="bi bi-calendar-check"></i> {{ i.mocks_booked }} booked</span>
+          <span class="sb-chip"><i class="bi bi-person-video3"></i> {{ i.rounds }} campus round{{ 's' if i.rounds != 1 }}</span>
+          <span class="sb-chip"><i class="bi bi-clipboard-check"></i> {{ i.evaluations }} evaluation{{ 's' if i.evaluations != 1 }}</span>
+        </div>
+        <div class="collapse" id="pw{{ i.id }}">
+          <form method="POST" action="{{ url_for('reset_interviewer_password', iid=i.id) }}" class="d-flex gap-2 mt-2">
+            <input type="text" name="password" class="form-control form-control-sm" minlength="6" required placeholder="New password" autocomplete="new-password">
+            <button class="btn btn-sm sb-btn-primary">Save</button>
+          </form>
+        </div>
+      </div>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-person-badge"></i>No interviewers yet. Add your first panel member on the left.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

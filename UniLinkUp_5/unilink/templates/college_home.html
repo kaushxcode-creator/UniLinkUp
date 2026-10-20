@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}College Dashboard — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mt-3 mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="mb-0">{{ college.name }}</h3>
+    <p class="text-muted mb-0">Established {{ college.established_year }} · {{ student_count }} students registered</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="sb-card">
+      <h5 class="mb-3">Announce a Campus Drive</h5>
+      <form method="POST">
+        <div class="mb-2">
+          <label class="form-label small">Company Name</label>
+          <input type="text" name="company_name" class="form-control" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Role</label>
+          <input type="text" name="role" class="form-control" placeholder="e.g. Software Engineer Trainee">
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Description</label>
+          <textarea name="description" class="form-control" rows="2"></textarea>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small">Registration Start Date</label>
+            <input type="date" name="reg_start" class="form-control" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Registration Last Date</label>
+            <input type="date" name="reg_end" class="form-control" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Package / Stipend <span class="text-muted fw-normal">(optional)</span></label>
+            <input type="text" name="package_lpa" class="form-control" placeholder="e.g. 4.5 LPA">
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Minimum CGPA <span class="text-muted fw-normal">(optional)</span></label>
+            <input type="number" step="0.1" min="0" max="10" name="min_cgpa" class="form-control" placeholder="e.g. 6.5">
+          </div>
+        </div>
+
+        <hr class="my-3">
+        <h6 class="text-muted small text-uppercase mb-2"><i class="bi bi-sliders2"></i> Eligibility Criteria</h6>
+        <p class="text-muted small">Used to compute each student's live Eligibility Match % for this drive — visible to both students and your dashboard.</p>
+
+        <div class="mb-2">
+          <label class="form-label small">Eligible Branches / Courses <span class="text-muted fw-normal">(comma separated, blank = all branches)</span></label>
+          <input type="text" name="eligible_courses" class="form-control" placeholder="e.g. CSE, ISE, AIML">
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label small">Eligible Years <span class="text-muted fw-normal">(blank = all years)</span></label>
+          <div class="d-flex flex-wrap gap-3">
+            {% for y in ['1st Year','2nd Year','3rd Year','4th Year'] %}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="eligible_years" value="{{ y }}" id="yr-{{ loop.index }}">
+                <label class="form-check-label small" for="yr-{{ loop.index }}">{{ y }}</label>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label small">Required Skills <span class="text-muted fw-normal">(comma separated, blank = none specific)</span></label>
+          <input type="text" name="required_skills" class="form-control" placeholder="e.g. Python, SQL, Data Structures">
+        </div>
+
+        <button type="submit" class="btn sb-btn-primary w-100 mt-3">Add Company Drive</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="sb-card">
+      <h5 class="mb-3">Current & Upcoming Drives</h5>
+      {% if companies %}
+        <div class="d-flex flex-column gap-3">
+          {% for c in companies %}
+            {% set ov = eligibility_overview.get(c.id, {'eligible_count': 0, 'avg_percent': 0}) %}
+            <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                  <strong>{{ c.company_name }}</strong>
+                  {% if c.package_lpa %}<span class="badge sb-badge-open ms-1">{{ c.package_lpa }}</span>{% endif %}
+                  <br><small class="text-muted">{{ c.role }}</small><br>
+                  <small class="text-muted">{{ c.reg_start | fmt_date('%d %b') }} &rarr; {{ c.reg_end | fmt_date }}</small>
+                </div>
+                <div class="d-flex gap-2">
+                  <form method="POST" action="{{ url_for('send_drive_reminder', company_id=c.id) }}">
+                    <button class="btn btn-sm sb-btn-outline" title="Notify students who haven't applied yet">
+                      <i class="bi bi-bell-fill"></i> Send Reminder
+                    </button>
+                  </form>
+                  <form method="POST" action="{{ url_for('delete_company', company_id=c.id) }}"
+                        onsubmit="return confirm('Remove this drive?');">
+                    <button class="btn btn-sm btn-outline-danger">Remove</button>
+                  </form>
+                </div>
+              </div>
+              <div class="mt-2 d-flex flex-wrap gap-2 align-items-center">
+                <span class="sb-eligibility-overview">
+                  <i class="bi bi-people-fill"></i> <strong>{{ ov.eligible_count }}</strong> of your students meet the criteria
+                </span>
+                <span class="sb-eligibility-overview">
+                  <i class="bi bi-graph-up-arrow"></i> Avg match <strong>{{ ov.avg_percent }}%</strong>
+                </span>
+                {% if c.min_cgpa and c.min_cgpa > 0 %}<span class="sb-eligibility-overview">CGPA {{ c.min_cgpa }}+</span>{% endif %}
+                {% if c.eligible_courses %}<span class="sb-eligibility-overview">{{ c.eligible_courses }}</span>{% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted">No drives added yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,20 @@
+{# Shared header for every login / register page.
+   Needs: auth_role ('student'|'faculty'|'college'|'company'), auth_mode ('login'|'register') #}
+{% set _roles = {
+  'student': ('Student', 'bi-mortarboard-fill', url_for('login'), url_for('register')),
+  'faculty': ('Faculty', 'bi-easel2-fill', url_for('faculty_login'), url_for('register_faculty')),
+  'college': ('College', 'bi-bank2', url_for('college_login'), url_for('college_register')),
+  'company': ('Company', 'bi-briefcase-fill', url_for('company_login'), url_for('company_register')),
+} %}
+{% set r = _roles[auth_role] %}
+<div class="sb-auth-head">
+  <div class="sb-auth-role">
+    <span class="sb-auth-role-badge"><i class="bi {{ r[1] }}"></i> {{ r[0] }} portal</span>
+    <a href="{{ url_for('choose_portal') }}" class="sb-auth-change" data-transition><i class="bi bi-arrow-left"></i> Change portal</a>
+  </div>
+  <div class="sb-auth-switch" data-current="{{ auth_mode }}">
+    <span class="sb-auth-switch-pill"></span>
+    <a href="{{ r[2] }}" class="{{ 'is-current' if auth_mode == 'login' }}" data-auth-switch="login">Login</a>
+    <a href="{{ r[3] }}" class="{{ 'is-current' if auth_mode == 'register' }}" data-auth-switch="register">Register</a>
+  </div>
+</div>

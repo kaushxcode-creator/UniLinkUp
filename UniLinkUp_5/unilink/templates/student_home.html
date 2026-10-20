@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Home — UniLinkUp{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mt-3 mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="mb-0">Welcome, {{ student.name }} 👋</h3>
+    <p class="text-muted mb-0">{{ student.course }} · {{ student.year }}, {{ student.semester }}</p>
+  </div>
+  <a href="{{ url_for('assessment_home') }}" class="btn sb-btn-primary">Take Skill Assessment</a>
+</div>
+
+<div class="sb-card d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+  <div class="d-flex align-items-center gap-3">
+    <div class="sb-icon-circle flex-shrink-0"><i class="bi bi-life-preserver"></i></div>
+    <div>
+      <h6 class="mb-0">Need help with something?</h6>
+      <p class="text-muted small mb-0">Raise a query and it goes straight to your placement cell.</p>
+    </div>
+  </div>
+  <a href="{{ url_for('help_center') }}" class="btn sb-btn-outline">Get Help</a>
+</div>
+
+<h5 class="mb-3">Companies Visiting Your Campus</h5>
+
+{% if not student.college_id %}
+  <div class="alert alert-warning">You haven't linked a college to your profile yet, so campus drives can't be shown. Update it from your profile page.</div>
+{% elif not companies %}
+  <div class="alert alert-info">No company drives have been announced yet. Check back soon!</div>
+{% else %}
+
+{% if not can_apply %}
+  <div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span>You need at least one certificate and one document on file before you can apply to any drive.</span>
+    <a href="{{ url_for('profile') }}" class="btn btn-sm sb-btn-primary">Upload now</a>
+  </div>
+{% endif %}
+
+<div class="row g-4">
+  {% for c in companies %}
+    {% set is_open = (parse_date(c.reg_start) <= today <= parse_date(c.reg_end)) %}
+    {% set m = matches[c.id] %}
+    <div class="col-md-6">
+      <div class="sb-card">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+              <h5 class="mb-0">{{ c.company_name }}</h5>
+              <span class="badge {{ 'sb-badge-open' if is_open else 'sb-badge-closed' }}">
+                {{ 'Open' if is_open else 'Closed' }}
+              </span>
+              {% if c.package_lpa %}<span class="badge" style="background: var(--sb-orange);">{{ c.package_lpa }}</span>{% endif %}
+            </div>
+            {% if c.role %}<p class="mb-1 fw-semibold text-muted">{{ c.role }}</p>{% endif %}
+          </div>
+          <div class="text-center flex-shrink-0" title="Your eligibility match for {{ c.company_name }}">
+            <div class="sb-match-ring" data-pct="{{ m.percent }}" style="--pct:{{ m.percent }}; --ring-color: {{ 'var(--sb-teal)' if m.percent >= 70 else ('var(--sb-amber)' if m.percent >= 40 else 'var(--sb-red)') }};"></div>
+            <span class="sb-match-pill mt-1 {{ 'sb-match-good' if m.eligible else 'sb-match-mid' }}">
+              {{ 'Eligible' if m.eligible else 'Check criteria' }}
+            </span>
+          </div>
+        </div>
+        <p class="text-muted small mt-2">{{ c.description }}</p>
+        <p class="mb-1"><strong>Registration Start:</strong> {{ c.reg_start | fmt_date }}</p>
+        <p class="mb-2"><strong>Registration Last Date:</strong> {{ c.reg_end | fmt_date }}</p>
+
+        <details class="mb-3">
+          <summary class="small text-muted" style="cursor:pointer;">Why this match %?</summary>
+          <ul class="sb-reason-list mt-2">
+            {% for label, ok, detail in m.reasons %}
+              <li>
+                <span class="sb-reason-icon {{ 'sb-reason-ok' if ok else 'sb-reason-bad' }}">
+                  <i class="bi {{ 'bi-check-circle-fill' if ok else 'bi-x-circle-fill' }}"></i>
+                </span>
+                <span><strong>{{ label }}:</strong> {{ detail }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </details>
+
+        {% if c.id in applied_ids %}
+          <button class="btn btn-outline-secondary w-100" disabled>Already Applied ✓</button>
+        {% elif not is_open %}
+          <button class="btn btn-outline-secondary w-100" disabled>Registration Closed</button>
+        {% elif not can_apply %}
+          <button class="btn btn-outline-secondary w-100" disabled title="Upload a certificate and a document first">
+            Complete Uploads to Apply
+          </button>
+        {% else %}
+          <a href="{{ url_for('apply_review', company_id=c.id) }}" class="btn sb-btn-primary w-100">Apply Now</a>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}

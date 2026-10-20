@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Faculty Registration — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-auth-wrap sb-auth-wide" data-role="faculty">
+  <div class="sb-auth-panel">
+    <img src="{{ url_for('static', filename='img/auth-register.svg') }}" alt="Profile checklist illustration">
+    <h3>Mentor students who need you most</h3>
+    <p>Offer time slots for 1-on-1 classes, see who books them, and track the progress of the students you mentor — all from one dashboard.</p>
+  </div>
+  <div class="sb-auth-form-side">
+    {% set auth_role, auth_mode = 'faculty', 'register' %}{% include '_auth_switch.html' %}
+    <h3 class="mb-1">Faculty Registration</h3>
+    <p class="text-muted small mb-4">Already registered? <a href="{{ url_for('faculty_login') }}" data-transition>Login</a>.</p>
+    <form method="POST" data-loading="Creating your account...">
+      <div class="row g-3">
+
+        <div class="col-md-6">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" required value="{{ form.get('name','') }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" name="email" class="form-control" required value="{{ form.get('email','') }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Department</label>
+          <select name="department" class="form-select">
+            <option value="">Select Department</option>
+            {% for d in ['Computer Science', 'Information Science', 'Electronics & Communication', 'Electrical & Electronics', 'AI & Machine Learning', 'Data Science', 'Mechanical', 'Civil', 'MBA', 'MCA', 'Other'] %}
+              <option value="{{ d }}" {{ 'selected' if form.get('department')==d else '' }}>{{ d }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Area of Expertise</label>
+          <input type="text" name="expertise" class="form-control" placeholder="e.g. Data Structures, Aptitude, Interview Prep" value="{{ form.get('expertise','') }}">
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">College / University</label>
+          <select name="college_id" class="form-select" data-searchable required>
+            <option value="">Select your college</option>
+            {% for c in colleges %}
+              <option value="{{ c.id }}" {{ 'selected' if form.get('college_id')==c.id|string else '' }}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+          <div class="form-text">Start typing to search {{ colleges|length }} colleges — only students at this college can book your slots.</div>
+        </div>
+
+        <div class="col-md-12">
+          <label class="form-label">Short Bio <span class="text-muted fw-normal">(optional)</span></label>
+          <textarea name="bio" class="form-control" rows="2" placeholder="A line students see before booking a class with you">{{ form.get('bio','') }}</textarea>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Confirm Password</label>
+          <input type="password" name="confirm_password" class="form-control" required>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn sb-btn-primary w-100 mt-4">
+        <i class="bi bi-person-plus-fill"></i> Register
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

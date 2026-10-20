@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}Company Requests — UniLinkUp{% endblock %}
+{% block content %}
+{% set pending = reqs | selectattr('status', 'equalto', 'pending') | list %}
+{% set answered = reqs | rejectattr('status', 'equalto', 'pending') | list %}
+<div class="sb-page-head">
+  <div>
+    <h3><i class="bi bi-briefcase-fill text-warning"></i> Company Requests</h3>
+    <p>Companies asking to visit your campus. Approving publishes the drive to your students straight away.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <span class="sb-status s-pending">{{ pending|length }} pending</span>
+    <span class="sb-status s-approved">{{ answered | selectattr('status', 'equalto', 'approved') | list | length }} approved</span>
+  </div>
+</div>
+
+<h5 class="mb-3">Awaiting your decision</h5>
+{% for r in pending %}
+<div class="sb-card mb-4" data-scroll="up">
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="d-flex gap-3 align-items-start">
+        <div class="sb-l-portal-icon flex-shrink-0 mb-0" data-role="company"><i class="bi bi-building"></i></div>
+        <div>
+          <h5 class="mb-0">{{ r.company_name }}</h5>
+          <small class="text-muted">{{ r.industry or 'Company' }}{% if r.company_location %} · {{ r.company_location }}{% endif %}{% if r.website %} · <a href="{{ r.website }}" target="_blank" rel="noopener">website</a>{% endif %}</small>
+          <div class="small text-muted">HR: {{ r.hr_name }} · <a href="mailto:{{ r.company_email }}">{{ r.company_email }}</a>{% if r.company_phone %} · {{ r.company_phone }}{% endif %}</div>
+        </div>
+      </div>
+      <div class="mt-3 p-3 rounded-4" style="background:#f6fbfa;border:1px solid var(--sb-border);">
+        <strong>{{ r.job_title }}</strong> <span class="sb-chip">{{ r.job_type }}</span>
+        {% if r.package_lpa %}<span class="badge sb-badge-open">{{ r.package_lpa }}</span>{% endif %}
+        <div class="small text-muted mt-1">{{ r.openings }} opening{{ 's' if r.openings != 1 }}{% if r.job_location %} · {{ r.job_location }}{% endif %}{% if r.proposed_date %} · proposed visit <strong>{{ r.proposed_date | fmt_date }}</strong>{% endif %}</div>
+        {% if r.job_description %}<p class="small mb-2 mt-2">{{ r.job_description }}</p>{% endif %}
+        <span class="sb-chip"><i class="bi bi-mortarboard"></i> CGPA {{ r.min_cgpa if r.min_cgpa else 'any' }}{{ '+' if r.min_cgpa }}</span>
+        <span class="sb-chip"><i class="bi bi-clipboard2-check"></i> Assessment {{ (r.min_assessment_pct ~ '%+') if r.min_assessment_pct else 'any' }}</span>
+        <span class="sb-chip"><i class="bi bi-diagram-3"></i> {{ r.eligible_courses or 'All branches' }}</span>
+        <span class="sb-chip"><i class="bi bi-calendar3"></i> {{ r.eligible_years or 'All years' }}</span>
+        {% if r.required_skills %}<span class="sb-chip"><i class="bi bi-tools"></i> {{ r.required_skills }}</span>{% endif %}
+      </div>
+      {% if r.message %}<p class="small mt-3 mb-0"><i class="bi bi-chat-left-quote text-muted"></i> <em>“{{ r.message }}”</em></p>{% endif %}
+      <div class="mt-3">
+        <div class="small d-flex justify-content-between"><span><strong>{{ eligible[r.id] }}</strong> of your {{ student_count }} students meet these criteria</span>
+          <span>{{ ((eligible[r.id] * 100 / student_count) if student_count else 0)|round|int }}%</span></div>
+        <div class="sb-meter" style="--w:{{ ((eligible[r.id] * 100 / student_count) if student_count else 0)|round }}%"><span></span></div>
+      </div>
+    </div>
+    <div class="col-lg-5">
+      <form method="POST" action="{{ url_for('approve_company_request', req_id=r.id) }}" class="p-3 rounded-4 mb-3" style="border:1.5px solid #bfe6dc;">
+        <div class="fw-semibold mb-2 text-success"><i class="bi bi-check-circle-fill"></i> Approve &amp; publish drive</div>
+        <div class="row g-2">
+          <div class="col-6"><label class="form-label small">Registration opens</label><input type="date" name="reg_start" class="form-control form-control-sm" value="{{ today.isoformat() }}"></div>
+          <div class="col-6"><label class="form-label small">Registration closes</label><input type="date" name="reg_end" class="form-control form-control-sm" value="{{ r.last_date or r.proposed_date or today.isoformat() }}"></div>
+        </div>
+        <input type="text" name="note" class="form-control form-control-sm mt-2" placeholder="Note to company (venue, timings…)">
+        <button class="btn sb-btn-primary btn-sm w-100 mt-2"><i class="bi bi-check2"></i> Approve</button>
+      </form>
+      <form method="POST" action="{{ url_for('reject_company_request', req_id=r.id) }}" class="p-3 rounded-4" style="border:1.5px solid #f3c9c9;">
+        <div class="fw-semibold mb-2 text-danger"><i class="bi bi-x-circle-fill"></i> Reject</div>
+        <input type="text" name="note" class="form-control form-control-sm" required placeholder="Reason, e.g. exam week — please propose another date">
+        <button class="btn btn-outline-danger btn-sm w-100 mt-2 rounded-pill"><i class="bi bi-x"></i> Reject request</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="sb-card mb-4"><div class="sb-empty"><i class="bi bi-inbox"></i>No pending company requests.</div></div>
+{% endfor %}
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Answered requests</h5>
+      {% for r in answered %}
+        <div class="d-flex justify-content-between align-items-start py-2 border-bottom gap-2" style="border-color:var(--sb-border)!important;">
+          <div><strong class="small">{{ r.company_name }}</strong> · <small class="text-muted">{{ r.job_title }}</small>
+            {% if r.college_note %}<div class="small text-muted fst-italic">“{{ r.college_note }}”</div>{% endif %}</div>
+          <span class="sb-status s-{{ r.status }}">{{ r.status }}</span>
+        </div>
+      {% else %}
+        <p class="small text-muted mb-0">Nothing answered yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="sb-card h-100">
+      <h5 class="mb-1">Hiring outcomes for your students</h5>
+      <p class="small text-muted">Shared by companies from their interview reports.</p>
+      {% if reports %}
+      <div class="table-responsive">
+        <table class="sb-table">
+          <thead><tr><th>Student</th><th>Company / Round</th><th>Result</th><th>Remarks</th></tr></thead>
+          <tbody>
+          {% for r in reports %}
+            <tr>
+              <td><strong>{{ r.student_name }}</strong><br><small class="text-muted">{{ r.srn or '' }}</small></td>
+              <td>{{ r.company_name }}<br><small class="text-muted">{{ r.job_title }} · {{ r.round_name or '' }}</small></td>
+              <td><span class="sb-status s-{{ r.result|lower|replace(' ', '-') }}">{{ r.result }}</span>{% if r.package_offered %}<br><small>{{ r.package_offered }}</small>{% endif %}</td>
+              <td class="small">{% if r.rejection_reason %}<span class="text-danger">{{ r.rejection_reason }}</span><br>{% endif %}{{ r.remarks or '' }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="sb-empty py-3"><i class="bi bi-clipboard"></i>No interview results yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

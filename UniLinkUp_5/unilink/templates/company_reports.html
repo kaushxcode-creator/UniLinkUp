@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block title %}Hiring Reports — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-page-head">
+  <div>
+    <h3><i class="bi bi-clipboard-data-fill text-success"></i> Hiring Reports</h3>
+    <p>Record every campus interview and get a report of who was selected, who wasn't, and why.</p>
+  </div>
+  <div class="d-flex gap-2 sb-no-print">
+    <a href="{{ url_for('export_company_reports', visit=sel_visit, result=sel_result) }}" class="btn sb-btn-outline"><i class="bi bi-filetype-csv"></i> Export CSV</a>
+    <button type="button" class="btn sb-btn-outline" onclick="window.print()"><i class="bi bi-printer"></i> Print</button>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-3">
+    <div class="sb-kpi h-100 text-center" data-scroll="zoom">
+      <div class="label mb-2">Selection rate</div>
+      <div class="sb-donut" id="sbDonut" data-target="{{ summary.rate }}" data-label="{{ summary.rate }}%"></div>
+    </div>
+  </div>
+  <div class="col-md-9">
+    <div class="row g-3 h-100">
+      {% for label, val, icon, cls in [('Interviewed', summary.total, 'bi-people-fill', 'k-blue'),
+                                       ('Selected', summary.selected, 'bi-trophy-fill', 'k-teal'),
+                                       ('Not selected', summary.rejected, 'bi-x-octagon-fill', 'k-orange'),
+                                       ('On hold', summary.hold, 'bi-pause-circle-fill', 'k-violet')] %}
+      <div class="col-6 col-lg-3">
+        <div class="sb-kpi {{ cls }}" data-scroll="up" style="--d:{{ loop.index0 * 0.07 }}s">
+          <div class="icon"><i class="bi {{ icon }}"></i></div>
+          <div class="label">{{ label }}</div>
+          <div class="value" data-count="{{ val }}">0</div>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="col-12">
+        <div class="sb-kpi">
+          <div class="d-flex justify-content-between flex-wrap mb-2">
+            <div class="label">Results by campus drive</div>
+            <div class="sb-legend"><span><i style="background:var(--sb-teal)"></i>Selected</span><span><i style="background:var(--sb-red)"></i>Not selected</span><span><i style="background:var(--sb-amber)"></i>On hold</span></div>
+          </div>
+          {% for (college, job), d in by_drive.items() %}
+            <div class="sb-bar-row">
+              <div class="text-truncate" title="{{ college }} — {{ job }}"><strong>{{ college }}</strong><br><small class="text-muted">{{ job }}</small></div>
+              <div class="sb-stack">
+                <span class="st-sel" style="--w:{{ (d['Selected'] * 100 / d.total)|round(1) }}%"></span>
+                <span class="st-rej" style="--w:{{ (d['Not Selected'] * 100 / d.total)|round(1) }}%"></span>
+                <span class="st-hold" style="--w:{{ (d['On Hold'] * 100 / d.total)|round(1) }}%"></span>
+              </div>
+              <div class="small text-nowrap"><strong>{{ d['Selected'] }}</strong>/{{ d.total }}</div>
+            </div>
+          {% else %}
+            <p class="small text-muted mb-0">Results appear here as you record interviews.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-5 sb-no-print" id="reportForm">
+    <div class="sb-card">
+      <h5 class="mb-1">Record an interview</h5>
+      <p class="small text-muted">Fill one form per student per round.</p>
+      {% if visits %}
+      <form method="POST" id="sbReportForm">
+        <div class="sb-form-section"><i class="bi bi-briefcase"></i> Drive &amp; round</div>
+        <div class="mb-2">
+          <label class="form-label small">Campus drive <span class="text-danger">*</span></label>
+          <select name="visit_request_id" id="fDrive" class="form-select" required>
+            {% for v in visits %}<option value="{{ v.id }}" {{ 'selected' if v.id == sel_visit }}>{{ v.college_name }} — {{ v.job_title }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="row g-2">
+          <div class="col-sm-7">
+            <label class="form-label small">Round</label>
+            <select name="schedule_id" id="fRound" class="form-select"></select>
+            <input type="text" name="round_name" id="fRoundName" class="form-control mt-2" placeholder="Round name" list="rn">
+            <datalist id="rn"><option>Technical Interview 1</option><option>Technical Interview 2</option><option>HR Interview</option><option>Group Discussion</option></datalist>
+          </div>
+          <div class="col-sm-5">
+            <label class="form-label small">Interview date</label>
+            <input type="date" name="interview_date" id="fDate" class="form-control" value="{{ today }}">
+            <input type="text" name="interviewer" id="fInterviewer" class="form-control mt-2" placeholder="Interviewer">
+          </div>
+        </div>
+
+        <div class="sb-form-section"><i class="bi bi-person-vcard"></i> Student details</div>
+        <div class="mb-2">
+          <label class="form-label small">Pick from applicants <span class="text-muted">(auto-fills the details)</span></label>
+          <select name="student_id" id="fApplicant" class="form-select"></select>
+        </div>
+        <div class="row g-2">
+          <div class="col-sm-7"><label class="form-label small">Full name <span class="text-danger">*</span></label><input type="text" name="student_name" id="fName" class="form-control" required></div>
+          <div class="col-sm-5"><label class="form-label small">SRN / Roll no.</label><input type="text" name="srn" id="fSrn" class="form-control"></div>
+          <div class="col-sm-7"><label class="form-label small">Email</label><input type="email" name="student_email" id="fEmail" class="form-control"></div>
+          <div class="col-sm-5"><label class="form-label small">Phone</label><input type="tel" name="phone" class="form-control"></div>
+          <div class="col-4"><label class="form-label small">Course</label><input type="text" name="course" id="fCourse" class="form-control"></div>
+          <div class="col-4"><label class="form-label small">Year</label><input type="text" name="year" id="fYear" class="form-control"></div>
+          <div class="col-4"><label class="form-label small">CGPA</label><input type="number" step="0.01" min="0" max="10" name="cgpa" id="fCgpa" class="form-control"></div>
+          <div class="col-12"><label class="form-label small">Department</label><input type="text" name="department" id="fDept" class="form-control"></div>
+        </div>
+
+        <div class="sb-form-section"><i class="bi bi-star-half"></i> Ratings</div>
+        {% for key, label in [('technical_rating','Technical'), ('communication_rating','Communication'), ('aptitude_rating','Aptitude / problem solving')] %}
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <span class="small">{{ label }}</span>
+          <div class="sb-stars">
+            {% for n in [5,4,3,2,1] %}
+              <input type="radio" name="{{ key }}" value="{{ n }}" id="{{ key }}{{ n }}"><label for="{{ key }}{{ n }}" title="{{ n }} / 5"><i class="bi bi-star-fill"></i></label>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+
+        <div class="sb-form-section"><i class="bi bi-flag"></i> Result</div>
+        <div class="sb-result-pick mb-2">
+          <div><input type="radio" name="result" value="Selected" id="rSel" required><label for="rSel" class="r-sel"><i class="bi bi-check-circle-fill"></i>Selected</label></div>
+          <div><input type="radio" name="result" value="Not Selected" id="rRej"><label for="rRej" class="r-rej"><i class="bi bi-x-circle-fill"></i>Not selected</label></div>
+          <div><input type="radio" name="result" value="On Hold" id="rHold"><label for="rHold" class="r-hold"><i class="bi bi-pause-circle-fill"></i>On hold</label></div>
+        </div>
+        <div class="sb-reveal-field" id="fSelBox">
+          <label class="form-label small mt-1">Package offered</label>
+          <input type="text" name="package_offered" class="form-control" placeholder="e.g. 6.5 LPA">
+        </div>
+        <div class="sb-reveal-field" id="fRejBox">
+          <label class="form-label small mt-1" id="fRejLabel">Reason not selected <span class="text-danger">*</span></label>
+          <textarea name="rejection_reason" id="fReason" rows="2" class="form-control" placeholder="e.g. Weak on data structures; could not explain project architecture"></textarea>
+        </div>
+        <label class="form-label small mt-2">Remarks</label>
+        <textarea name="remarks" rows="3" class="form-control" placeholder="Strengths, areas to improve, feedback for the placement cell…"></textarea>
+        <button class="btn sb-btn-primary w-100 mt-3"><i class="bi bi-save2"></i> Save interview report</button>
+      </form>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-hourglass-split"></i>Once a college approves your campus visit you can record interview results here.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="sb-card">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h5 class="mb-0">Interview records</h5>
+        <form method="GET" class="d-flex gap-2 sb-no-print">
+          <select name="visit" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All drives</option>
+            {% for v in visits %}<option value="{{ v.id }}" {{ 'selected' if v.id == sel_visit }}>{{ v.college_name }} — {{ v.job_title }}</option>{% endfor %}
+          </select>
+          <select name="result" class="form-select form-select-sm" onchange="this.form.submit()">
+            <option value="">All results</option>
+            {% for r in results %}<option {{ 'selected' if r == sel_result }}>{{ r }}</option>{% endfor %}
+          </select>
+        </form>
+      </div>
+      {% for r in reports %}
+        <div class="sb-item">
+          <div class="d-flex justify-content-between gap-2 flex-wrap">
+            <div>
+              <strong>{{ r.student_name }}</strong> {% if r.srn %}<small class="text-muted">· {{ r.srn }}</small>{% endif %}<br>
+              <small class="text-muted">{{ r.course or '' }}{% if r.year %} · {{ r.year }}{% endif %}{% if r.cgpa %} · CGPA {{ r.cgpa }}{% endif %} · {{ r.college_name }}</small>
+            </div>
+            <div class="text-end">
+              <span class="sb-status s-{{ r.result|lower|replace(' ', '-') }}">{{ r.result }}</span><br>
+              <small class="text-muted">{{ r.round_name or 'Interview' }} · {{ r.interview_date | fmt_date }}</small>
+            </div>
+          </div>
+          <div class="small mt-2">
+            <span class="sb-chip"><i class="bi bi-briefcase"></i> {{ r.job_title }}</span>
+            {% if r.interviewer %}<span class="sb-chip"><i class="bi bi-person-badge"></i> {{ r.interviewer }}</span>{% endif %}
+            {% for lbl, v in [('Tech', r.technical_rating), ('Comm', r.communication_rating), ('Apt', r.aptitude_rating)] if v %}
+              <span class="sb-chip">{{ lbl }} {% for i in range(v) %}<i class="bi bi-star-fill" style="color:#f5b531"></i>{% endfor %}</span>
+            {% endfor %}
+            {% if r.package_offered %}<span class="sb-chip"><i class="bi bi-cash-coin"></i> {{ r.package_offered }}</span>{% endif %}
+          </div>
+          {% if r.rejection_reason %}<div class="small mt-2"><strong class="text-danger">Reason:</strong> {{ r.rejection_reason }}</div>{% endif %}
+          {% if r.remarks %}<div class="small mt-1"><strong>Remarks:</strong> {{ r.remarks }}</div>{% endif %}
+          <form method="POST" action="{{ url_for('delete_interview_report', rid=r.id) }}" class="text-end sb-no-print" onsubmit="return confirm('Delete this record?');">
+            <button class="btn btn-link btn-sm text-danger p-0">Delete</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-clipboard"></i>No interview records match.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  // Donut fill
+  var d = document.getElementById('sbDonut');
+  if (d) {
+    var t = +d.dataset.target, p = 0;
+    (function step() { p = Math.min(t, p + Math.max(1, t / 40)); d.style.setProperty('--p', p); if (p < t) requestAnimationFrame(step); })();
+  }
+
+  var DATA = {{ drive_data | tojson }};
+  var drive = document.getElementById('fDrive');
+  if (!drive) return;
+  var $ = function (id) { return document.getElementById(id); };
+  var applicant = $('fApplicant'), round = $('fRound');
+
+  function fillDrive() {
+    var info = DATA[drive.value] || { applicants: [], rounds: [] };
+    applicant.innerHTML = '<option value="">— Enter details manually —</option>' +
+      info.applicants.map(function (s) { return '<option value="' + s.id + '">' + s.name + ' (' + (s.srn || '') + ')</option>'; }).join('');
+    if (!info.applicants.length) applicant.innerHTML = '<option value="">No applicants yet — enter details manually</option>';
+    round.innerHTML = '<option value="">— Not linked to a scheduled round —</option>' +
+      info.rounds.map(function (r) { return '<option value="' + r.id + '">' + r.name + ' · ' + r.date + '</option>'; }).join('');
+  }
+  applicant.addEventListener('change', function () {
+    var info = DATA[drive.value] || { applicants: [] };
+    var s = info.applicants.filter(function (x) { return String(x.id) === applicant.value; })[0];
+    var set = function (id, v) { var el = $(id); el.value = v == null ? '' : v; el.classList.add('sb-flash'); setTimeout(function () { el.classList.remove('sb-flash'); }, 700); };
+    if (s) { set('fName', s.name); set('fSrn', s.srn); set('fEmail', s.email); set('fCourse', s.course); set('fYear', s.year); set('fCgpa', s.cgpa); set('fDept', s.department); }
+  });
+  round.addEventListener('change', function () {
+    var info = DATA[drive.value] || { rounds: [] };
+    var r = info.rounds.filter(function (x) { return String(x.id) === round.value; })[0];
+    if (r) { $('fRoundName').value = r.name; $('fDate').value = r.date; if (r.panel) $('fInterviewer').value = r.panel; }
+  });
+  drive.addEventListener('change', fillDrive);
+  fillDrive();
+
+  // Result: reveal the right follow-up field
+  var reason = $('fReason');
+  document.querySelectorAll('input[name=result]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      $('fSelBox').classList.toggle('is-open', r.value === 'Selected');
+      $('fRejBox').classList.toggle('is-open', r.value !== 'Selected');
+      reason.required = r.value === 'Not Selected';
+      $('fRejLabel').innerHTML = r.value === 'On Hold' ? 'Why on hold?' : 'Reason not selected <span class="text-danger">*</span>';
+    });
+  });
+})();
+</script>
+<style>.sb-flash{animation:sbFlash .7s ease}@keyframes sbFlash{0%{background:#d6f6ec}100%{background:#fff}}</style>
+{% endblock %}

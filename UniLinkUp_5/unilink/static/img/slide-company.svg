@@ -1,0 +1,55 @@
+<svg viewBox="0 0 600 450" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Company office building with a job post board and a shortlist of candidates">
+  <defs>
+    <linearGradient id="gcbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#fff3e8"/>
+      <stop offset="100%" stop-color="#e8fbf5"/>
+    </linearGradient>
+  </defs>
+  <circle cx="300" cy="225" r="200" fill="url(#gcbg)"/>
+  <ellipse cx="300" cy="392" rx="190" ry="18" fill="#0d2b2f" opacity="0.08"/>
+
+  <!-- office tower -->
+  <rect x="120" y="120" width="130" height="270" rx="8" fill="#0d2b2f"/>
+  <rect x="120" y="120" width="130" height="18" rx="8" fill="#123a3f"/>
+  <g fill="#6fe0c4">
+    <rect x="138" y="152" width="22" height="18" rx="3"/><rect x="174" y="152" width="22" height="18" rx="3" opacity=".55"/><rect x="210" y="152" width="22" height="18" rx="3"/>
+    <rect x="138" y="186" width="22" height="18" rx="3" opacity=".55"/><rect x="174" y="186" width="22" height="18" rx="3"/><rect x="210" y="186" width="22" height="18" rx="3"/>
+    <rect x="138" y="220" width="22" height="18" rx="3"/><rect x="174" y="220" width="22" height="18" rx="3"/><rect x="210" y="220" width="22" height="18" rx="3" opacity=".55"/>
+    <rect x="138" y="254" width="22" height="18" rx="3" opacity=".55"/><rect x="174" y="254" width="22" height="18" rx="3"/><rect x="210" y="254" width="22" height="18" rx="3"/>
+    <rect x="138" y="288" width="22" height="18" rx="3"/><rect x="174" y="288" width="22" height="18" rx="3" opacity=".55"/><rect x="210" y="288" width="22" height="18" rx="3"/>
+  </g>
+  <rect x="166" y="340" width="38" height="50" rx="4" fill="#e8823c"/>
+
+  <!-- job post board -->
+  <rect x="290" y="110" width="200" height="150" rx="14" fill="#ffffff" stroke="#e1ece9" stroke-width="3"/>
+  <rect x="310" y="130" width="90" height="12" rx="6" fill="#14b391"/>
+  <rect x="310" y="152" width="150" height="7" rx="3.5" fill="#cfe6e2"/>
+  <rect x="310" y="166" width="130" height="7" rx="3.5" fill="#cfe6e2"/>
+  <rect x="310" y="190" width="58" height="22" rx="11" fill="#e8fbf5" stroke="#14b391" stroke-width="2"/>
+  <rect x="376" y="190" width="58" height="22" rx="11" fill="#fff3e8" stroke="#e8823c" stroke-width="2"/>
+  <rect x="310" y="226" width="160" height="20" rx="10" fill="#0d2b2f"/>
+  <rect x="352" y="232" width="76" height="8" rx="4" fill="#6fe0c4"/>
+
+  <!-- shortlist cards -->
+  <g>
+    <rect x="300" y="285" width="190" height="40" rx="10" fill="#ffffff" stroke="#e1ece9" stroke-width="2"/>
+    <circle cx="322" cy="305" r="11" fill="#f2c29b"/>
+    <rect x="342" y="298" width="80" height="6" rx="3" fill="#0d2b2f"/>
+    <rect x="342" y="309" width="54" height="5" rx="2.5" fill="#cfe6e2"/>
+    <circle cx="468" cy="305" r="11" fill="#14b391"/>
+    <path d="M462 305 l4 4 l8 -8" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g>
+    <rect x="300" y="335" width="190" height="40" rx="10" fill="#ffffff" stroke="#e1ece9" stroke-width="2"/>
+    <circle cx="322" cy="355" r="11" fill="#a9704a"/>
+    <rect x="342" y="348" width="80" height="6" rx="3" fill="#0d2b2f"/>
+    <rect x="342" y="359" width="54" height="5" rx="2.5" fill="#cfe6e2"/>
+    <circle cx="468" cy="355" r="11" fill="#e8823c"/>
+    <rect x="462" y="353" width="12" height="4" rx="2" fill="#fff"/>
+  </g>
+
+  <!-- sparkles -->
+  <circle cx="520" cy="90" r="6" fill="#14b391"/>
+  <circle cx="92" cy="160" r="5" fill="#e8823c"/>
+  <rect x="510" y="270" width="10" height="10" rx="2" fill="#6fe0c4" transform="rotate(30 515 275)"/>
+</svg>

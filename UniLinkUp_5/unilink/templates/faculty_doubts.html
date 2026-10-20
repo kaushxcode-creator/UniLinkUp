@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Doubts & Messages — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Doubts & Messages</h3>
+<p class="text-muted mb-4">Answer academic doubts from your department, and reply to students messaging you directly.</p>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-7">
+    <div class="sb-card h-100">
+      <h5 class="mb-3"><i class="bi bi-question-circle-fill"></i> Open Doubts &middot; {{ faculty.department or 'Your Department' }}</h5>
+      {% if open_doubts %}
+        <div class="d-flex flex-column gap-3">
+          {% for d in open_doubts %}
+            <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between flex-wrap gap-1">
+                <strong class="small">{{ d.student_name }} &middot; {{ d.subject }}</strong>
+                <small class="text-muted">{{ d.created_at[:10] | fmt_date }}</small>
+              </div>
+              <p class="small text-muted mb-2">{{ d.message }}</p>
+              {% if d.image_path %}
+                <a href="{{ url_for('uploaded_file', subfolder='doubts', filename=d.image_path) }}" target="_blank">
+                  <img src="{{ url_for('uploaded_file', subfolder='doubts', filename=d.image_path) }}" class="img-fluid rounded-3 mb-2" style="max-height: 160px;" alt="Doubt attachment">
+                </a>
+              {% endif %}
+              <form method="POST" action="{{ url_for('answer_doubt', doubt_id=d.id) }}" enctype="multipart/form-data" class="row g-2">
+                <div class="col-12">
+                  <input type="text" name="answer" class="form-control form-control-sm" placeholder="Write your answer..." required>
+                </div>
+                <div class="col-8">
+                  <input type="file" name="image" class="form-control form-control-sm" accept=".png,.jpg,.jpeg,.gif">
+                </div>
+                <div class="col-4">
+                  <button type="submit" class="btn btn-sm sb-btn-primary w-100">Answer</button>
+                </div>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted small mb-0">No open doubts from your department right now.</p>
+      {% endif %}
+
+      {% if answered_by_me %}
+        <h6 class="small text-uppercase text-muted mt-4 mb-2">Recently Answered</h6>
+        <ul class="list-group list-group-flush">
+          {% for d in answered_by_me %}
+            <li class="list-group-item px-0">
+              <span class="small"><strong>{{ d.student_name }}</strong> &middot; {{ d.subject }}</span><br>
+              <span class="small text-muted">{{ d.answer }}</span>
+              {% if d.answer_image_path %}
+                <br><a href="{{ url_for('uploaded_file', subfolder='doubts', filename=d.answer_image_path) }}" target="_blank" class="small">View attached image</a>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="sb-card h-100">
+      <h5 class="mb-3"><i class="bi bi-chat-dots-fill"></i> Messages</h5>
+      {% if threads %}
+        <ul class="list-group list-group-flush">
+          {% for t in threads %}
+            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+              <a href="{{ url_for('message_thread', other_id=t.student_id) }}">{{ t.student_name }}</a>
+              {% if t.unread %}<span class="sb-bell-badge" style="position:static;">{{ t.unread }}</span>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="text-muted small mb-0">No messages yet — students can message you from their Ask Faculty page.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

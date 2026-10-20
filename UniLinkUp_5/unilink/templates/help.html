@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Help — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Help &amp; Support</h3>
+<p class="text-muted mb-4">Stuck on something? Describe the problem below and it goes straight to your placement cell.</p>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="sb-card">
+      <h5 class="mb-3"><i class="bi bi-life-preserver"></i> Raise a query</h5>
+      <form method="POST">
+        <div class="mb-2">
+          <label class="form-label small">What's this about?</label>
+          <select name="category" class="form-select">
+            <option value="Login / Account">Login / Account</option>
+            <option value="Application / Drive">Application / Drive</option>
+            <option value="Certificate / Document Upload">Certificate / Document Upload</option>
+            <option value="Assessment">Assessment</option>
+            <option value="Eligibility / Match %">Eligibility / Match %</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Subject</label>
+          <input type="text" name="subject" class="form-control" placeholder="Short summary of the issue" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Describe the problem</label>
+          <textarea name="message" class="form-control" rows="5" placeholder="Tell us what happened, what you expected, and any error you saw..." required></textarea>
+        </div>
+        <button type="submit" class="btn sb-btn-primary w-100 mt-2">Send to my placement cell</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="sb-card">
+      <h5 class="mb-3">Your queries</h5>
+      {% if tickets %}
+        <div class="d-flex flex-column gap-2">
+          {% for t in tickets %}
+            <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                <div>
+                  <strong>{{ t.subject }}</strong>
+                  {% if t.category %}<span class="text-muted small ms-1">· {{ t.category }}</span>{% endif %}
+                  <br><small class="text-muted">{{ t.created_at[:16] }}</small>
+                </div>
+                <span class="badge {{ 'sb-badge-closed' if t.status == 'resolved' else 'sb-badge-open' }}">
+                  {{ 'Resolved' if t.status == 'resolved' else 'Open' }}
+                </span>
+              </div>
+              <p class="mb-0 mt-2 small text-muted">{{ t.message }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No queries sent yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Choose your portal — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-portal-page">
+  <div class="sb-portal-bg" aria-hidden="true">
+    <span style="width:320px;height:320px;background:#14b391;top:-40px;left:-80px;"></span>
+    <span style="width:280px;height:280px;background:#e8823c;bottom:0;right:-60px;animation-duration:22s;"></span>
+  </div>
+
+  <div class="sb-portal-head text-center mb-5">
+    <span class="sb-l-eyebrow sb-reveal" style="--d:.05s;background:#e3f8f2;color:#0e8a70;border-color:#bfe6dc;"><i class="bi bi-door-open-fill"></i> Login / Register</span>
+    <h1 class="mt-3 sb-reveal" style="--d:.12s">Who are you signing in as?</h1>
+    <p class="sb-reveal" style="--d:.2s">Pick your portal. Each one is built for a different part of campus placement.</p>
+  </div>
+
+  {% set portals = [
+    {'role': 'student', 'icon': 'bi-mortarboard-fill', 'title': 'Student',
+     'desc': 'For students preparing for placements and internships.',
+     'points': ['Verified skill profile & resume builder', 'Eligibility Match % for every drive', 'Assessments, mentors & one-click apply'],
+     'login': url_for('login'), 'register': url_for('register')},
+    {'role': 'faculty', 'icon': 'bi-easel2-fill', 'title': 'Faculty',
+     'desc': 'For professors and mentors guiding students.',
+     'points': ['1-on-1 and group mentor slots', 'Create custom timed tests', 'Answer doubts & track progress'],
+     'login': url_for('faculty_login'), 'register': url_for('register_faculty')},
+    {'role': 'college', 'icon': 'bi-bank2', 'title': 'College',
+     'desc': 'For placement cells running campus recruitment.',
+     'points': ['Announce drives with eligibility rules', 'Approve or reject company visit requests', 'Verify resumes & track readiness'],
+     'login': url_for('college_login'), 'register': url_for('college_register')},
+    {'role': 'company', 'icon': 'bi-briefcase-fill', 'title': 'Company',
+     'desc': 'For recruiters and their interviewers hiring from campuses.',
+     'points': ['Post job drives & request campus visits', 'Interviewer login with blind student profiles', 'Mock interviews, schedules & hiring reports'],
+     'login': url_for('company_login'), 'register': url_for('company_register')},
+  ] %}
+
+  <div class="row g-4" id="sbRoleGrid">
+    {% for p in portals %}
+    <div class="col-sm-6 col-xl-3">
+      <div class="sb-role-card" data-role="{{ p.role }}" data-href="{{ p.login }}" style="--i:{{ loop.index0 }}" tabindex="0" role="link" aria-label="{{ p.title }} portal">
+        <div class="sb-role-icon"><i class="bi {{ p.icon }}"></i></div>
+        <div class="sb-role-title">{{ p.title }}</div>
+        <p class="sb-role-desc">{{ p.desc }}</p>
+        <ul class="sb-role-list">
+          {% for pt in p.points %}<li><i class="bi bi-check-circle-fill"></i><span>{{ pt }}</span></li>{% endfor %}
+        </ul>
+        <div class="sb-role-cta">
+          <a href="{{ p.login }}" class="btn btn-role" data-pick>Login</a>
+          <a href="{{ p.register }}" class="btn btn-role-outline" data-pick>Register</a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  var cards = document.querySelectorAll('.sb-role-card');
+  function pick(card, href) {
+    cards.forEach(function (c) {
+      c.style.transform = '';
+      c.classList.add(c === card ? 'is-chosen' : 'is-dismissed');
+    });
+    setTimeout(function () { window.sbLeaveTo ? window.sbLeaveTo(href) : (location.href = href); }, 280);
+  }
+  cards.forEach(function (card) {
+    card.addEventListener('click', function (e) {
+      var a = e.target.closest('a[data-pick]');
+      e.preventDefault();
+      pick(card, a ? a.href : card.dataset.href);
+    });
+    card.addEventListener('keydown', function (e) {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target === card) { e.preventDefault(); pick(card, card.dataset.href); }
+    });
+  });
+})();
+</script>
+{% endblock %}

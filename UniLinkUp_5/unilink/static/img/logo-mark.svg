@@ -1,0 +1,15 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="UniLinkUp logo">
+  <defs>
+    <linearGradient id="logoRingA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6fe0c4"/>
+      <stop offset="1" stop-color="#0e8a70"/>
+    </linearGradient>
+    <linearGradient id="logoRingB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f2a35d"/>
+      <stop offset="1" stop-color="#cf6a26"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="64" height="64" rx="16" fill="#0d2b2f"/>
+  <rect x="9" y="22" width="30" height="18" rx="9" transform="rotate(-32 24 31)" fill="none" stroke="url(#logoRingA)" stroke-width="6.5"/>
+  <rect x="27" y="30" width="30" height="18" rx="9" transform="rotate(-32 42 39)" fill="none" stroke="url(#logoRingB)" stroke-width="6.5"/>
+</svg>

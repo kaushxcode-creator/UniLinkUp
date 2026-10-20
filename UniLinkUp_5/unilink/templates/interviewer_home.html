@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Interviewer Dashboard — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-mic-hero" data-scroll="up">
+  <div class="sb-mic-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="small text-uppercase" style="letter-spacing:2px;opacity:.8;">Interviewer · {{ iv.company_name }}</div>
+  <h3 class="mb-1">Hello, {{ iv.name }}</h3>
+  <p>{{ iv.designation or 'Interviewer' }}{% if iv.expertise %} · interviews on {{ iv.expertise }}{% endif %}</p>
+  <div class="d-flex gap-2 mt-3 flex-wrap">
+    <a href="{{ url_for('interviewer_mock') }}" class="btn btn-light rounded-pill fw-semibold"><i class="bi bi-plus-lg"></i> Open mock slots</a>
+    <a href="{{ url_for('interviewer_campus') }}" class="btn btn-outline-light rounded-pill fw-semibold"><i class="bi bi-person-video3"></i> Campus rounds</a>
+  </div>
+</div>
+
+<div class="row g-3 mt-2">
+  {% for label, val, icon, cls in [('Booked mock interviews', stats.booked, 'bi-calendar-check-fill', 'k-blue'),
+                                   ('Open slots', stats.open, 'bi-door-open-fill', 'k-teal'),
+                                   ('Mocks completed', stats.done, 'bi-check2-all', 'k-green'),
+                                   ('Campus rounds assigned', stats.rounds, 'bi-person-video3', 'k-orange')] %}
+  <div class="col-6 col-lg-3">
+    <div class="sb-kpi {{ cls }}" data-scroll="up" style="--d:{{ loop.index0 * 0.07 }}s">
+      <div class="icon"><i class="bi {{ icon }}"></i></div>
+      <div class="label">{{ label }}</div>
+      <div class="value" data-count="{{ val }}">0</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-7">
+    <div class="sb-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Your booked mock interviews</h5>
+        <span class="sb-blind-tag"><i class="bi bi-eye-slash-fill"></i> Blind mode</span>
+      </div>
+      {% for m in booked %}
+        {% set p = profiles[m.id] %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <div class="d-flex gap-2 align-items-center">
+              <div class="sb-date-tile"><div class="d">{{ m.slot_date | fmt_date('%d') }}</div><div class="m">{{ m.slot_date | fmt_date('%b') }}</div></div>
+              <div><strong>{{ m.start_time }}{% if m.end_time %}–{{ m.end_time }}{% endif %}</strong> <span class="sb-focus f-{{ m.focus|lower }}">{{ m.focus }}</span><br>
+                <small class="text-muted">Preparing for: <strong>{{ m.target_role }}</strong></small></div>
+            </div>
+            <a href="{{ url_for('interviewer_mock_session', slot_id=m.id) }}" class="btn btn-sm sb-btn-primary"><i class="bi bi-play-circle"></i> Open session</a>
+          </div>
+          {% if p %}{% with compact=True %}{% include '_blind_profile.html' %}{% endwith %}{% endif %}
+        </div>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-calendar2-x"></i>No bookings yet. Open a few slots so students can book you.</div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="sb-card mb-4">
+      <h5 class="mb-3">Assigned campus rounds</h5>
+      {% for r in rounds %}
+        <a href="{{ url_for('interviewer_round', sid=r.id) }}" class="d-flex gap-3 align-items-center mb-3 text-reset">
+          <div class="sb-date-tile"><div class="d">{{ r.interview_date | fmt_date('%d') }}</div><div class="m">{{ r.interview_date | fmt_date('%b') }}</div></div>
+          <div><strong>{{ r.round_name }}</strong><br><small class="text-muted">{{ r.job_title }} · {{ r.mode }}{% if r.start_time %} · {{ r.start_time }}{% endif %}</small></div>
+          <i class="bi bi-chevron-right ms-auto text-muted"></i>
+        </a>
+      {% else %}
+        <div class="sb-empty py-3"><i class="bi bi-person-video3"></i>Your HR hasn't assigned you a campus round yet.</div>
+      {% endfor %}
+    </div>
+    <div class="sb-card">
+      <h5 class="mb-3">Open slots</h5>
+      {% for m in open_slots[:5] %}
+        <div class="d-flex justify-content-between small py-1"><span>{{ m.slot_date | fmt_date('%a %d %b') }} · {{ m.start_time }}</span><span class="sb-focus f-{{ m.focus|lower }}">{{ m.focus }}</span></div>
+      {% else %}
+        <p class="small text-muted mb-0">No open slots.</p>
+      {% endfor %}
+      <a href="{{ url_for('interviewer_mock') }}" class="small d-inline-block mt-2">Manage slots <i class="bi bi-arrow-right"></i></a>
+    </div>
+  </div>
+</div>
+{% endblock %}

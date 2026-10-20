@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Resume Builder — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Resume Builder</h3>
+<p class="text-muted mb-4">Your name, CGPA, skills and college come straight from your profile — add your
+  experience, projects and achievements below, then generate a resume in the format you want.
+  <a href="{{ url_for('profile') }}">Edit profile details here.</a></p>
+
+<div class="sb-card mb-4">
+  <h6 class="text-muted mb-2">From Your Profile</h6>
+  <p class="mb-1"><strong>{{ student.name }}</strong> &middot; {{ student.email }}</p>
+  <p class="mb-1 small text-muted">
+    {{ student.course or '—' }}{% if student.department %} &middot; {{ student.department }}{% endif %}
+    {% if student.cgpa %} &middot; CGPA {{ student.cgpa }}{% endif %}
+  </p>
+  <p class="mb-0 small"><strong>Skills:</strong> {{ student.skills or 'None listed yet — add some on your Profile page.' }}</p>
+</div>
+
+<div class="sb-card mb-4">
+  <h5 class="mb-3">Professional Summary</h5>
+  <form method="POST" action="{{ url_for('save_resume_summary') }}">
+    <textarea name="summary" class="form-control mb-2" rows="3"
+              placeholder="A 2-3 line pitch: who you are, what you're aiming for, your strongest skill area.">{{ student.resume_summary or '' }}</textarea>
+    <button type="submit" class="btn btn-sm sb-btn-primary">Save Summary</button>
+  </form>
+</div>
+
+<div class="row g-4">
+  {% for kind, label in labels.items() %}
+    <div class="col-lg-4">
+      <div class="sb-card h-100">
+        <h5 class="mb-3">{{ label }}</h5>
+        <div class="d-flex flex-column gap-2 mb-3">
+          {% for item in grouped[kind] %}
+            <div class="border rounded-4 p-2" style="border-color: var(--sb-border) !important;">
+              <div class="d-flex justify-content-between align-items-start gap-2">
+                <div>
+                  <strong class="small">{{ item.title }}</strong>
+                  {% if item.organization %}<div class="text-muted small">{{ item.organization }}</div>{% endif %}
+                  {% if item.duration %}<div class="text-muted small">{{ item.duration }}</div>{% endif %}
+                  {% if item.description %}<p class="small mb-0 mt-1">{{ item.description }}</p>{% endif %}
+                </div>
+                <form method="POST" action="{{ url_for('delete_resume_item', item_id=item.id) }}">
+                  <button class="btn btn-sm btn-outline-danger py-0 px-1"><i class="bi bi-x-lg"></i></button>
+                </form>
+              </div>
+            </div>
+          {% else %}
+            <p class="text-muted small mb-0">Nothing added yet.</p>
+          {% endfor %}
+        </div>
+        <form method="POST" action="{{ url_for('add_resume_item') }}">
+          <input type="hidden" name="kind" value="{{ kind }}">
+          <div class="mb-2">
+            <input type="text" name="title" class="form-control form-control-sm"
+                   placeholder="{{ 'Role title' if kind == 'experience' else ('Project name' if kind == 'project' else 'Achievement') }}" required>
+          </div>
+          {% if kind != 'achievement' %}
+            <div class="mb-2">
+              <input type="text" name="organization" class="form-control form-control-sm"
+                     placeholder="{{ 'Company' if kind == 'experience' else 'Tech stack / context' }}">
+            </div>
+            <div class="mb-2">
+              <input type="text" name="duration" class="form-control form-control-sm" placeholder="e.g. Jun 2025 - Aug 2025">
+            </div>
+          {% endif %}
+          <div class="mb-2">
+            <textarea name="description" class="form-control form-control-sm" rows="2" placeholder="A line or two of detail"></textarea>
+          </div>
+          <button type="submit" class="btn btn-sm sb-btn-outline w-100"><i class="bi bi-plus-lg"></i> Add</button>
+        </form>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<div class="sb-card mt-4">
+  <h5 class="mb-3">Generate &amp; Download</h5>
+  <form method="POST" action="{{ url_for('generate_resume') }}" class="row g-2 align-items-end">
+    <div class="col-auto">
+      <label class="form-label small mb-1">Format</label>
+      <select name="format" class="form-select">
+        <option value="pdf">PDF</option>
+        <option value="docx">Word (.docx)</option>
+        <option value="txt">Plain text (.txt)</option>
+      </select>
+    </div>
+    <div class="col-auto">
+      <button type="submit" class="btn sb-btn-primary"><i class="bi bi-file-earmark-arrow-down-fill"></i> Generate Resume</button>
+    </div>
+  </form>
+  <p class="text-muted small mt-2 mb-0">
+    Generating saves it to your Profile's Resume &amp; ATS Score section (with a fresh ATS score) and takes you
+    there — from there you can view or download the file. A newly generated resume starts unverified; your
+    placement cell needs to verify it before it can be shared with a company.
+  </p>
+</div>
+
+{% endblock %}

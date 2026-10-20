@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Mock session — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-page-head">
+  <div>
+    <a href="{{ url_for('interviewer_mock') }}" class="small text-muted"><i class="bi bi-arrow-left"></i> Mock Interviews</a>
+    <h3 class="mt-1">Mock interview with {{ p.name }}</h3>
+    <p>{{ m.slot_date | fmt_date('%A, %d %b %Y') }} · {{ m.start_time }}{% if m.end_time %}–{{ m.end_time }}{% endif %} · <span class="sb-focus f-{{ m.focus|lower }}">{{ m.focus }}</span> · <span class="sb-status s-{{ m.status }}">{{ m.status }}</span></p>
+  </div>
+  {% if m.meeting_link and m.status == 'booked' %}
+    <a href="{{ m.meeting_link }}" target="_blank" rel="noopener" class="btn sb-btn-primary"><i class="bi bi-camera-video-fill"></i> Join meeting</a>
+  {% endif %}
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    {% include '_blind_profile.html' %}
+    <div class="sb-card mt-4">
+      <h6 class="text-uppercase small text-muted mb-2">What the student asked for</h6>
+      <p class="mb-1"><strong>Role:</strong> {{ m.target_role or '—' }}</p>
+      <p class="mb-1"><strong>Topics:</strong> {{ m.student_topics or '—' }}</p>
+      {% if m.student_note %}<p class="mb-0"><strong>Note:</strong> <em>{{ m.student_note }}</em></p>{% endif %}
+      {% if history %}
+        <hr>
+        <h6 class="text-uppercase small text-muted mb-2">Earlier mock verdicts</h6>
+        {% for h in history %}<div class="small">{{ h.slot_date | fmt_date }} · {{ h.focus }} — <strong>{{ h.verdict }}</strong></div>{% endfor %}
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="sb-card">
+      {% if feedback %}
+        <h5 class="mb-3">Feedback sent</h5>
+        {% set vcls = 'v-ready' if feedback.verdict.startswith('Ready') else ('v-almost' if feedback.verdict.startswith('Almost') else 'v-practice') %}
+        <div class="sb-verdict {{ vcls }} mb-3"><i class="bi bi-flag-fill"></i> {{ feedback.verdict }}</div>
+        {% for lbl, v in [('Technical', feedback.technical), ('Communication', feedback.communication), ('Problem solving', feedback.problem_solving), ('Confidence', feedback.confidence)] %}
+          <div class="sb-rating-row"><span>{{ lbl }}</span><div class="sb-meter" style="--w:{{ (v or 0) * 20 }}%"><span></span></div><strong>{{ v or '—' }}</strong></div>
+        {% endfor %}
+        {% if feedback.strengths %}<p class="mt-3 mb-1"><strong class="text-success">Strengths:</strong> {{ feedback.strengths }}</p>{% endif %}
+        <p class="mb-1"><strong class="text-warning">To improve:</strong> {{ feedback.improvements }}</p>
+        {% if feedback.resources %}<p class="mb-0"><strong>Practice next:</strong> {{ feedback.resources }}</p>{% endif %}
+      {% elif m.status == 'booked' %}
+        <h5 class="mb-1">Feedback for the student</h5>
+        <p class="small text-muted">The student sees this on their Mock Interview page.</p>
+        <form method="POST">
+          <div class="sb-form-section"><i class="bi bi-star-half"></i> Ratings</div>
+          {% for key, label in [('technical','Technical knowledge'), ('communication','Communication'), ('problem_solving','Problem solving'), ('confidence','Confidence')] %}
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <span class="small">{{ label }}</span>
+            <div class="sb-stars">
+              {% for n in [5,4,3,2,1] %}<input type="radio" name="{{ key }}" value="{{ n }}" id="{{ key }}{{ n }}"><label for="{{ key }}{{ n }}" title="{{ n }} / 5"><i class="bi bi-star-fill"></i></label>{% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+          <div class="sb-form-section"><i class="bi bi-flag"></i> Overall verdict</div>
+          <div class="sb-verdict-pick">
+            {% for v in verdicts %}
+              {% set c = ['v-ready','v-almost','v-practice'][loop.index0] %}
+              {% set ic = ['bi-rocket-takeoff-fill','bi-hourglass-split','bi-arrow-repeat'][loop.index0] %}
+              <div><input type="radio" name="verdict" value="{{ v }}" id="vd{{ loop.index }}" required><label for="vd{{ loop.index }}" class="{{ c }}"><i class="bi {{ ic }}"></i>{{ v }}</label></div>
+            {% endfor %}
+          </div>
+          <label class="form-label small mt-3">What went well</label>
+          <textarea name="strengths" rows="2" class="form-control" placeholder="Specific things they did well"></textarea>
+          <label class="form-label small mt-2">What to improve <span class="text-danger">*</span></label>
+          <textarea name="improvements" rows="3" class="form-control" required placeholder="Concrete, actionable points"></textarea>
+          <label class="form-label small mt-2">What to practise next</label>
+          <textarea name="resources" rows="2" class="form-control" placeholder="Topics, question types, resources"></textarea>
+          <button class="btn sb-btn-primary w-100 mt-3"><i class="bi bi-send-fill"></i> Submit feedback &amp; complete</button>
+        </form>
+        <form method="POST" class="text-center mt-2" onsubmit="return confirm('Mark this student as a no-show?');">
+          <input type="hidden" name="action" value="no-show">
+          <button class="btn btn-link btn-sm text-muted">Student didn't join — mark as no-show</button>
+        </form>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-info-circle"></i>This session is {{ m.status }}.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

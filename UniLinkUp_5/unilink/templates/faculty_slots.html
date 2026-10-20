@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}Slots — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-4">Your Slots</h3>
+
+{% if pending_requests %}
+<div class="sb-card mb-4">
+  <h5 class="mb-3"><i class="bi bi-hourglass-split"></i> Pending Requests <span class="badge sb-badge-closed">{{ pending_requests|length }}</span></h5>
+  <div class="d-flex flex-column gap-3">
+    {% for r in pending_requests %}
+      <div class="border rounded-4 p-3" style="border-color: var(--sb-border) !important;">
+        <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+          <div>
+            <strong>{{ r.student_name }}</strong>
+            <span class="text-muted small"> &middot; {{ r.student_course or '—' }}{% if r.student_year %} &middot; {{ r.student_year }}{% endif %}</span>
+            <br>
+            <span class="badge" style="background: var(--sb-red);">Wants to learn: {{ r.skill }}</span>
+            {% if r.company_name %}<span class="text-muted small"> &middot; needed for {{ r.company_name }}</span>{% endif %}
+          </div>
+          <small class="text-muted">Requested {{ r.created_at[:10] | fmt_date }}</small>
+        </div>
+        {% if r.message %}<p class="small text-muted mb-2">&ldquo;{{ r.message }}&rdquo;</p>{% endif %}
+
+        <div class="row g-2 align-items-end">
+          <form method="POST" action="{{ url_for('approve_slot_request', request_id=r.id) }}" class="row g-2 align-items-end flex-grow-1">
+            <div class="col-6 col-md-3">
+              <label class="form-label small mb-1">Date</label>
+              <input type="date" name="proposed_date" class="form-control form-control-sm" min="{{ today }}" required>
+            </div>
+            <div class="col-6 col-md-2">
+              <label class="form-label small mb-1">Start</label>
+              <input type="time" name="proposed_start" class="form-control form-control-sm" required>
+            </div>
+            <div class="col-6 col-md-2">
+              <label class="form-label small mb-1">End</label>
+              <input type="time" name="proposed_end" class="form-control form-control-sm" required>
+            </div>
+            <div class="col-6 col-md-3">
+              <label class="form-label small mb-1">Meeting link <span class="text-muted fw-normal">(optional)</span></label>
+              <input type="url" name="meeting_link" class="form-control form-control-sm" placeholder="https://meet.google.com/...">
+            </div>
+            <div class="col-12 col-md-2">
+              <button type="submit" class="btn btn-sm sb-btn-primary w-100"><i class="bi bi-check2"></i> Approve</button>
+            </div>
+          </form>
+        </div>
+        <form method="POST" action="{{ url_for('decline_slot_request', request_id=r.id) }}" class="row g-2 align-items-end mt-2">
+          <div class="col-12 col-md-5">
+            <label class="form-label small mb-1">Reason for declining <span class="text-danger">*</span></label>
+            <input type="text" name="decline_reason" class="form-control form-control-sm" placeholder="Why can't you take this request?" required>
+          </div>
+          <div class="col-8 col-md-4">
+            <label class="form-label small mb-1">Date of another class they can join <span class="text-danger">*</span></label>
+            <input type="date" name="alternate_date" class="form-control form-control-sm" min="{{ today }}" required>
+          </div>
+          <div class="col-4 col-md-3">
+            <button type="submit" class="btn btn-sm btn-outline-danger w-100">Decline</button>
+          </div>
+        </form>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-4">
+    <div class="sb-card">
+      <h5 class="mb-3">Offer a New Slot</h5>
+      <form method="POST">
+        <div class="mb-2">
+          <label class="form-label small">Date</label>
+          <input type="date" name="slot_date" class="form-control" min="{{ today }}" required>
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small">Start Time</label>
+            <input type="time" name="start_time" class="form-control" required>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">End Time</label>
+            <input type="time" name="end_time" class="form-control" required>
+          </div>
+        </div>
+        <div class="mb-2 mt-2">
+          <label class="form-label small">Topic <span class="text-muted fw-normal">(optional)</span></label>
+          <input type="text" name="topic" class="form-control" placeholder="e.g. Resume review, DSA doubts, mock interview">
+        </div>
+        <div class="row g-2">
+          <div class="col-5">
+            <label class="form-label small">Seats</label>
+            <input type="number" name="capacity" class="form-control" value="1" min="1" max="100">
+            <div class="form-text">1 = one-on-one, more = a group class others can join too.</div>
+          </div>
+          <div class="col-7">
+            <label class="form-label small">Meeting link <span class="text-muted fw-normal">(optional)</span></label>
+            <input type="url" name="meeting_link" class="form-control" placeholder="Zoom / Meet URL">
+          </div>
+        </div>
+        <button type="submit" class="btn sb-btn-primary w-100 mt-2"><i class="bi bi-calendar2-plus"></i> Add Slot</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+    <div class="sb-card">
+      <h5 class="mb-3">All Your Slots</h5>
+      {% if slots %}
+        <div class="table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr><th>Date</th><th>Time</th><th>Topic</th><th>Seats</th><th>Link</th><th></th></tr>
+            </thead>
+            <tbody>
+              {% for s in slots %}
+                <tr>
+                  <td>{{ s.slot_date | fmt_date }}</td>
+                  <td>{{ s.start_time }} &ndash; {{ s.end_time }}</td>
+                  <td>{{ s.topic or '—' }}</td>
+                  <td>
+                    {% if s.status == 'cancelled' %}
+                      <span class="badge sb-badge-closed">Cancelled</span>
+                      {% if s.cancel_reason %}<br><small class="text-muted">Reason: {{ s.cancel_reason }}</small>{% endif %}
+                    {% elif s.seats_taken >= s.capacity %}
+                      <span class="badge sb-badge-closed">Full ({{ s.seats_taken }}/{{ s.capacity }})</span>
+                    {% elif s.seats_taken > 0 %}
+                      <span class="badge sb-badge-open">{{ s.seats_taken }}/{{ s.capacity }} joined</span>
+                    {% else %}
+                      <span class="badge sb-badge-open">Open (0/{{ s.capacity }})</span>
+                    {% endif %}
+                    {% if s.status != 'cancelled' and s.student_names %}
+                      <br><small class="text-muted">{{ s.student_names | join(', ') }}</small>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if s.meeting_link %}
+                      <a href="{{ s.meeting_link }}" target="_blank" class="small"><i class="bi bi-camera-video-fill"></i> Link</a>
+                    {% else %}
+                      <span class="text-muted small">—</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if s.status != 'cancelled' and s.seats_taken == 0 %}
+                      <form method="POST" action="{{ url_for('delete_faculty_slot', slot_id=s.id) }}" onsubmit="return confirm('Remove this slot?');">
+                        <button class="btn btn-sm btn-outline-danger">Remove</button>
+                      </form>
+                    {% elif s.status != 'cancelled' and s.seats_taken > 0 %}
+                      <details>
+                        <summary class="small text-danger" style="cursor:pointer;">Cancel Class</summary>
+                        <form method="POST" action="{{ url_for('cancel_faculty_slot', slot_id=s.id) }}"
+                              class="mt-2 text-start" style="min-width: 220px;"
+                              onsubmit="return confirm('This notifies every student booked into this class. Continue?');">
+                          <label class="form-label small mb-1">Reason for cancelling <span class="text-danger">*</span></label>
+                          <textarea name="cancel_reason" class="form-control form-control-sm mb-2" rows="2" placeholder="e.g. I'm unwell and can't take this class" required></textarea>
+                          <button type="submit" class="btn btn-sm btn-outline-danger w-100">Confirm Cancel</button>
+                        </form>
+                      </details>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">You haven't offered any slots yet — add one from the left.</p>
+      {% endif %}
+    </div>
+
+    {% if handled_requests %}
+    <div class="sb-card mt-4">
+      <h5 class="mb-3">Recently Handled Requests</h5>
+      <ul class="list-group list-group-flush">
+        {% for r in handled_requests %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ r.student_name }} &middot; {{ r.skill }}</span>
+            <span class="badge {{ 'sb-badge-open' if r.status == 'approved' else 'sb-badge-closed' }}">{{ r.status | capitalize }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

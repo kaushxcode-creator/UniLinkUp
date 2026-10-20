@@ -1,0 +1,29 @@
+{# Blind student profile shown to interviewers.
+   Needs: p (from blind_profile()), optional: required (list of skills to highlight), compact (bool) #}
+{% set req_l = (required or []) | map('lower') | list %}
+<div class="sb-blind">
+  <div class="sb-blind-head">
+    <div class="sb-blind-avatar">{{ p.name[:1] | upper }}</div>
+    <div class="flex-grow-1">
+      <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap">
+        <strong class="fs-6">{{ p.name }}</strong>
+        <span class="sb-blind-tag"><i class="bi bi-eye-slash-fill"></i> Blind profile</span>
+      </div>
+      <small class="text-muted">{{ p.course }}{% if p.department and p.department != p.course %} · {{ p.department }}{% endif %}{% if p.year %} · {{ p.year }}{% endif %}</small>
+    </div>
+  </div>
+  <div class="mt-2">
+    {% for sk in p.skills %}<span class="sb-skill {{ 'is-match' if sk|lower in req_l }}">{% if sk|lower in req_l %}<i class="bi bi-check2"></i> {% endif %}{{ sk }}</span>{% else %}<span class="small text-muted">No skills listed yet.</span>{% endfor %}
+  </div>
+  {% if not compact %}
+  <dl>
+    <dt>Assessment</dt><dd>{{ (p.assessment ~ '%') if p.assessment is not none else 'Not taken yet' }}</dd>
+    {% if p.projects %}<dt>Projects</dt><dd>{% for pr in p.projects %}<div><strong>{{ pr.title }}</strong>{% if pr.description %} — <span class="text-muted">{{ pr.description | truncate(140) }}</span>{% endif %}</div>{% endfor %}</dd>{% endif %}
+    {% if p.certifications %}<dt>Certifications</dt><dd>{{ p.certifications | join(', ') }}</dd>{% endif %}
+    {% if p.achievements %}<dt>Achievements</dt><dd>{{ p.achievements | join(', ') }}</dd>{% endif %}
+  </dl>
+  <div class="sb-hidden-list" title="Hidden to keep the interview fair">
+    <i class="bi bi-shield-lock text-muted"></i> Hidden: <span>College</span><span>CGPA</span><span>SRN</span><span>Email</span><span>Phone</span><span>Photo</span>
+  </div>
+  {% endif %}
+</div>

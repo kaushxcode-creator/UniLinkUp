@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Student Progress — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Student Progress</h3>
+<p class="text-muted mb-4">Readiness of the students who have booked a class with you, {{ faculty.name.split(' ')[0] }}.</p>
+
+{% if not data %}
+  <div class="alert alert-info">No student has booked a slot with you yet — once someone does, their progress shows up here.</div>
+{% else %}
+<div class="table-responsive">
+  <table class="table align-middle sb-card">
+    <thead>
+      <tr>
+        <th>Name</th><th>SRN</th><th>Course / Year</th>
+        <th>Best Assessment Score</th><th>Certificates</th><th style="width:220px;">Overall Progress</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in data %}
+        <tr>
+          <td>{{ row.student.name }}</td>
+          <td>{{ row.student.srn }}</td>
+          <td>{{ row.student.course }} &middot; {{ row.student.year }}</td>
+          <td>{{ row.best_score }}</td>
+          <td>{{ row.certificates }}</td>
+          <td>
+            <div class="progress">
+              <div class="progress-bar" style="width:{{ row.progress }}%">{{ row.progress }}%</div>
+            </div>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+{% endblock %}

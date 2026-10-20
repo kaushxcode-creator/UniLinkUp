@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% block title %}Apply — {{ company.company_name }} — UniLinkUp{% endblock %}
+{% block content %}
+
+<h3 class="mt-3 mb-1">Apply to {{ company.company_name }}</h3>
+{% if company.role %}<p class="text-muted mb-4">{{ company.role }}</p>{% endif %}
+
+{% if already %}
+  <div class="alert alert-info">You've already applied to this drive. Submitting again isn't required.</div>
+{% elif not is_open %}
+  <div class="alert alert-warning">Registration for this drive is currently closed.</div>
+{% endif %}
+
+<div class="sb-card mb-4">
+  <div class="d-flex align-items-center gap-3 flex-wrap">
+    <div class="sb-match-ring" data-pct="{{ match.percent }}" style="--pct:{{ match.percent }}; --ring-color: {{ 'var(--sb-teal)' if match.percent >= 70 else ('var(--sb-amber)' if match.percent >= 40 else 'var(--sb-red)') }};"></div>
+    <div>
+      <h5 class="mb-1">Eligibility Match: {{ match.percent }}%</h5>
+      <span class="sb-match-pill {{ 'sb-match-good' if match.eligible else 'sb-match-mid' }}">
+        {{ 'You meet the hard eligibility criteria' if match.eligible else 'One or more criteria not yet met' }}
+      </span>
+    </div>
+  </div>
+  <ul class="sb-reason-list mt-3">
+    {% for label, ok, detail in match.reasons %}
+      <li>
+        <span class="sb-reason-icon {{ 'sb-reason-ok' if ok else 'sb-reason-bad' }}">
+          <i class="bi {{ 'bi-check-circle-fill' if ok else 'bi-x-circle-fill' }}"></i>
+        </span>
+        <span><strong>{{ label }}:</strong> {{ detail }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="row g-4">
+  <!-- Auto-filled profile summary -->
+  <div class="col-md-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Your Details</h5>
+      <p class="text-muted small mb-3">Pulled automatically from your profile — update it from the Profile page if anything's out of date.</p>
+      <div class="row g-2">
+        <div class="col-6"><label class="form-label small">Name</label><input class="form-control" value="{{ student.name }}" disabled></div>
+        <div class="col-6"><label class="form-label small">SRN</label><input class="form-control" value="{{ student.srn }}" disabled></div>
+        <div class="col-6"><label class="form-label small">Course</label><input class="form-control" value="{{ student.course or '—' }}" disabled></div>
+        <div class="col-6"><label class="form-label small">Section</label><input class="form-control" value="{{ student.section or '—' }}" disabled></div>
+        <div class="col-6"><label class="form-label small">Year</label><input class="form-control" value="{{ student.year or '—' }}" disabled></div>
+        <div class="col-6"><label class="form-label small">Semester</label><input class="form-control" value="{{ student.semester or '—' }}" disabled></div>
+        <div class="col-6"><label class="form-label small">CGPA</label><input class="form-control" value="{{ student.cgpa or '—' }}" disabled></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto-fetched certificates & documents -->
+  <div class="col-md-6">
+    <div class="sb-card h-100">
+      <h5 class="mb-3">Certificates</h5>
+      <ul class="list-group list-group-flush mb-4">
+        {% for cert in certificates %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ cert.title }}
+            <a class="btn btn-sm sb-btn-outline" href="{{ url_for('uploaded_file', subfolder='certificates', filename=cert.filename) }}" target="_blank">View</a>
+          </li>
+        {% endfor %}
+      </ul>
+
+      <h5 class="mb-3">Documents</h5>
+      <ul class="list-group list-group-flush">
+        {% for doc in documents %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            {{ doc.title }}
+            <a class="btn btn-sm sb-btn-outline" href="{{ url_for('uploaded_file', subfolder='documents', filename=doc.filename) }}" target="_blank">View</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mt-4">
+  <a href="{{ url_for('student_home') }}" class="btn btn-outline-secondary">Back</a>
+  {% if not already and is_open %}
+    <form method="POST" action="{{ url_for('apply_to_company', company_id=company.id) }}">
+      <button type="submit" class="btn sb-btn-primary">Confirm & Submit Application</button>
+    </form>
+  {% endif %}
+</div>
+
+{% endblock %}

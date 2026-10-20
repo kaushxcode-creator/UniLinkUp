@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Job Drive Post — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-page-head">
+  <div>
+    <h3><i class="bi bi-megaphone-fill text-warning"></i> Job Drive Post</h3>
+    <p>Create a job drive and set eligibility on student performance. Colleges see these rules when you request a visit.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="sb-card">
+      <h5 class="mb-3">Post a new job drive</h5>
+      <form method="POST">
+        <div class="mb-2">
+          <label class="form-label small">Job Title <span class="text-danger">*</span></label>
+          <input type="text" name="title" class="form-control" required placeholder="e.g. Associate Software Engineer">
+        </div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small">Type</label>
+            <select name="job_type" class="form-select">
+              <option>Full-time</option><option>Internship</option><option>Internship + PPO</option><option>Contract</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Openings</label>
+            <input type="number" name="openings" min="1" value="1" class="form-control">
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Package / Stipend</label>
+            <input type="text" name="package_lpa" class="form-control" placeholder="e.g. 6.5 LPA">
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Job Location</label>
+            <input type="text" name="location" class="form-control" placeholder="e.g. Bengaluru">
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Description</label>
+            <textarea name="description" rows="3" class="form-control" placeholder="Responsibilities, selection rounds, bond, etc."></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Last date to apply</label>
+            <input type="date" name="last_date" class="form-control">
+          </div>
+        </div>
+
+        <div class="sb-form-section"><i class="bi bi-sliders2"></i> Eligibility on student performance</div>
+        <div class="row g-2">
+          <div class="col-6">
+            <label class="form-label small">Minimum CGPA</label>
+            <input type="number" step="0.1" min="0" max="10" name="min_cgpa" class="form-control" placeholder="e.g. 7.0" id="minCgpa">
+          </div>
+          <div class="col-6">
+            <label class="form-label small">Min. Assessment Score: <strong id="assessOut">0%</strong></label>
+            <input type="range" name="min_assessment_pct" min="0" max="100" step="5" value="0" class="form-range mt-2" id="assessRange">
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Eligible Branches <span class="text-muted">(comma separated, blank = all)</span></label>
+            <input type="text" name="eligible_courses" class="form-control" placeholder="e.g. CSE, ISE, AIML">
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Eligible Years <span class="text-muted">(blank = all)</span></label>
+            <div class="d-flex flex-wrap gap-3">
+              {% for y in ['1st Year','2nd Year','3rd Year','4th Year'] %}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="eligible_years" value="{{ y }}" id="jy{{ loop.index }}">
+                <label class="form-check-label small" for="jy{{ loop.index }}">{{ y }}</label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Required Skills <span class="text-muted">(comma separated)</span></label>
+            <input type="text" name="required_skills" class="form-control" placeholder="e.g. Python, SQL, Data Structures">
+          </div>
+        </div>
+        <p class="small text-muted mt-2 mb-0"><i class="bi bi-info-circle"></i> A student is eligible only if they meet the CGPA, branch, year and assessment-score rules. Skills raise their match %.</p>
+        <button type="submit" class="btn sb-btn-primary w-100 mt-3"><i class="bi bi-send-fill"></i> Post Job Drive</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="sb-card">
+      <h5 class="mb-3">Your job drives</h5>
+      {% for j in jobs %}
+        {% set rc = req_counts.get(j.id, {}) %}
+        <div class="sb-item">
+          <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+            <div>
+              <strong>{{ j.title }}</strong> <span class="sb-status s-{{ j.status }} ms-1">{{ j.status }}</span><br>
+              <small class="text-muted">{{ j.job_type }} · {{ j.openings }} opening{{ 's' if j.openings != 1 }}{% if j.package_lpa %} · {{ j.package_lpa }}{% endif %}{% if j.location %} · {{ j.location }}{% endif %}{% if j.last_date %} · apply by {{ j.last_date | fmt_date }}{% endif %}</small>
+            </div>
+            <div class="d-flex gap-1">
+              <a href="{{ url_for('company_colleges', job=j.id) }}" class="btn btn-sm sb-btn-primary"><i class="bi bi-buildings"></i> Find colleges</a>
+              <form method="POST" action="{{ url_for('toggle_job_post', job_id=j.id) }}">
+                <button class="btn btn-sm sb-btn-outline">{{ 'Close' if j.status == 'open' else 'Reopen' }}</button>
+              </form>
+              <form method="POST" action="{{ url_for('delete_job_post', job_id=j.id) }}" onsubmit="return confirm('Delete this job drive and its pending requests?');">
+                <button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+              </form>
+            </div>
+          </div>
+          {% if j.description %}<p class="small text-muted mt-2 mb-1">{{ j.description }}</p>{% endif %}
+          <div class="mt-2">
+            <span class="sb-chip"><i class="bi bi-mortarboard"></i> CGPA {{ j.min_cgpa if j.min_cgpa else 'any' }}{{ '+' if j.min_cgpa }}</span>
+            <span class="sb-chip"><i class="bi bi-clipboard2-check"></i> Assessment {{ (j.min_assessment_pct ~ '%+') if j.min_assessment_pct else 'any' }}</span>
+            <span class="sb-chip"><i class="bi bi-diagram-3"></i> {{ j.eligible_courses or 'All branches' }}</span>
+            <span class="sb-chip"><i class="bi bi-calendar3"></i> {{ j.eligible_years or 'All years' }}</span>
+            {% if j.required_skills %}<span class="sb-chip"><i class="bi bi-tools"></i> {{ j.required_skills }}</span>{% endif %}
+          </div>
+          <div class="small mt-2 text-muted">
+            Requests: <strong class="text-warning">{{ rc.get('pending', 0) }}</strong> pending ·
+            <strong class="text-success">{{ rc.get('approved', 0) }}</strong> approved ·
+            <strong class="text-danger">{{ rc.get('rejected', 0) }}</strong> rejected
+          </div>
+        </div>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-megaphone"></i>Your first job drive will appear here.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function(){var r=document.getElementById('assessRange'),o=document.getElementById('assessOut');
+if(r){r.addEventListener('input',function(){o.textContent=r.value+'%';});}})();
+</script>
+{% endblock %}

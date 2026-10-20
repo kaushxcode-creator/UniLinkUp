@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Student Registration — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-auth-wrap sb-auth-wide" data-role="student">
+  <div class="sb-auth-panel">
+    <img src="{{ url_for('static', filename='img/auth-register.svg') }}" alt="Profile checklist illustration">
+    <h3>Join UniLinkUp</h3>
+    <p>Build a verified skill profile once, and see your Eligibility Match % for every campus drive at your college — automatically.</p>
+  </div>
+  <div class="sb-auth-form-side">
+    {% set auth_role, auth_mode = 'student', 'register' %}{% include '_auth_switch.html' %}
+    <h3 class="mb-1">Student Registration</h3>
+    <p class="text-muted small mb-4">Already have an account? <a href="{{ url_for('login') }}" data-transition>Login</a>.</p>
+      <form method="POST" data-loading="Creating your account...">
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-control" required value="{{ form.get('name','') }}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">SRN</label>
+            <input type="text" name="srn" class="form-control" required value="{{ form.get('srn','') }}">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Section</label>
+            <input type="text" name="section" class="form-control" placeholder="e.g. A" value="{{ form.get('section','') }}">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Course</label>
+            <input type="text" name="course" class="form-control" required placeholder="e.g. B.Tech CSE" value="{{ form.get('course','') }}">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Department</label>
+            <select name="department" class="form-select">
+              <option value="">Select Department</option>
+              {% for d in ['Computer Science', 'Information Science', 'Electronics & Communication', 'Electrical & Electronics', 'AI & Machine Learning', 'Data Science', 'Mechanical', 'Civil', 'MBA', 'MCA', 'Other'] %}
+                <option value="{{ d }}" {{ 'selected' if form.get('department')==d else '' }}>{{ d }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Used to group and target you by department for notifications.</div>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Year</label>
+            <select name="year" class="form-select" required>
+              <option value="">Select Year</option>
+              {% for y in ['1st Year','2nd Year','3rd Year','4th Year'] %}
+                <option value="{{ y }}" {{ 'selected' if form.get('year')==y else '' }}>{{ y }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Semester</label>
+            <select name="semester" class="form-select" required>
+              <option value="">Select Semester</option>
+              {% for s in range(1,9) %}
+                <option value="Semester {{ s }}" {{ 'selected' if form.get('semester')=='Semester ' ~ s else '' }}>Semester {{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">CGPA</label>
+            <input type="text" name="cgpa" class="form-control" required placeholder="e.g. 8.5" value="{{ form.get('cgpa','') }}">
+          </div>
+
+          <div class="col-md-8">
+            <label class="form-label">College / University</label>
+            <select name="college_id" class="form-select" data-searchable>
+              <option value="">Not listed / Skip</option>
+              {% for c in colleges %}
+                <option value="{{ c.id }}" {{ 'selected' if form.get('college_id')==c.id|string else '' }}>{{ c.name }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text">Start typing to search {{ colleges|length }} colleges — links your account to your college's placement dashboard.</div>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Skills <span class="text-muted fw-normal">(comma separated)</span></label>
+            <input type="text" name="skills" class="form-control" placeholder="e.g. Python, SQL, React, Communication" value="{{ form.get('skills','') }}">
+            <div class="form-text">Used to compute your Eligibility Match % against each company's required skills.</div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Mail ID</label>
+            <input type="email" name="email" class="form-control" required value="{{ form.get('email','') }}">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" name="confirm_password" class="form-control" required>
+          </div>
+
+        </div>
+
+        <button type="submit" class="btn sb-btn-primary w-100 mt-4">
+          <i class="bi bi-person-plus-fill"></i> Register
+        </button>
+      </form>
+  </div>
+</div>
+{% endblock %}

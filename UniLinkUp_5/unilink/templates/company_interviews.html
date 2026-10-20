@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Interview Schedules — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-page-head">
+  <div>
+    <h3><i class="bi bi-calendar-event-fill text-info"></i> Interview Schedules</h3>
+    <p>Plan interview rounds for every campus that approved your visit.</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="sb-card">
+      <h5 class="mb-3">Schedule a round</h5>
+      {% if visits %}
+      <form method="POST">
+        <div class="mb-2">
+          <label class="form-label small">Campus drive <span class="text-danger">*</span></label>
+          <select name="visit_request_id" class="form-select" required>
+            {% for v in visits %}<option value="{{ v.id }}">{{ v.college_name }} — {{ v.job_title }} ({{ applicants.get(v.id, 0) }} applicants)</option>{% endfor %}
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label small">Round <span class="text-danger">*</span></label>
+          <input type="text" name="round_name" class="form-control" list="roundNames" required placeholder="e.g. Technical Interview 1">
+          <datalist id="roundNames">
+            <option>Pre-placement Talk</option><option>Online Aptitude Test</option><option>Group Discussion</option>
+            <option>Technical Interview 1</option><option>Technical Interview 2</option><option>HR Interview</option>
+          </datalist>
+        </div>
+        <div class="row g-2">
+          <div class="col-12 col-sm-4"><label class="form-label small">Date <span class="text-danger">*</span></label>
+            <input type="date" name="interview_date" min="{{ today }}" class="form-control" required></div>
+          <div class="col-6 col-sm-4"><label class="form-label small">From</label><input type="time" name="start_time" class="form-control"></div>
+          <div class="col-6 col-sm-4"><label class="form-label small">To</label><input type="time" name="end_time" class="form-control"></div>
+        </div>
+        <div class="mb-2 mt-2">
+          <label class="form-label small">Mode</label>
+          <div class="d-flex gap-3">
+            {% for m in ['On-campus', 'Online', 'At company office'] %}
+            <div class="form-check"><input class="form-check-input" type="radio" name="mode" value="{{ m }}" id="mode{{ loop.index }}" {{ 'checked' if loop.first }}>
+              <label class="form-check-label small" for="mode{{ loop.index }}">{{ m }}</label></div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="mb-2"><label class="form-label small">Venue</label><input type="text" name="venue" class="form-control" placeholder="e.g. Seminar Hall B"></div>
+        <div class="mb-2"><label class="form-label small">Meeting link (online rounds)</label><input type="url" name="meeting_link" class="form-control" placeholder="https://"></div>
+        <div class="mb-2">
+          <label class="form-label small">Assign interviewer <span class="text-muted">(they evaluate candidates in blind mode)</span></label>
+          <select name="interviewer_id" class="form-select">
+            <option value="">— Not assigned —</option>
+            {% for i in interviewers %}<option value="{{ i.id }}">{{ i.name }}{% if i.designation %} · {{ i.designation }}{% endif %}</option>{% endfor %}
+          </select>
+          {% if not interviewers %}<small class="text-muted"><a href="{{ url_for('company_interviewers') }}">Add interviewers</a> to assign them to rounds.</small>{% endif %}
+        </div>
+        <div class="mb-2"><label class="form-label small">Other panel members</label><input type="text" name="panel" class="form-control" placeholder="Names"></div>
+        <div class="mb-2"><label class="form-label small">Instructions for students</label><textarea name="notes" rows="2" class="form-control"></textarea></div>
+        <button class="btn sb-btn-primary w-100 mt-2"><i class="bi bi-calendar-plus"></i> Schedule</button>
+      </form>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-hourglass-split"></i>You can schedule interviews once a college approves your visit request.<br>
+          <a href="{{ url_for('company_colleges') }}" class="btn sb-btn-primary btn-sm mt-3">Go to College List</a></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="sb-card mb-4">
+      <h5 class="mb-3">Upcoming <span class="badge bg-success-subtle text-success rounded-pill">{{ upcoming|length }}</span></h5>
+      {% for s in upcoming %}
+        <div class="sb-item d-flex gap-3">
+          <div class="sb-date-tile align-self-start"><div class="d">{{ s.interview_date | fmt_date('%d') }}</div><div class="m">{{ s.interview_date | fmt_date('%b') }}</div></div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between flex-wrap gap-2">
+              <div><strong>{{ s.round_name }}</strong> <span class="sb-status s-scheduled ms-1">{{ s.mode }}</span><br>
+                <small class="text-muted">{{ s.college_name }} · {{ s.job_title }}</small></div>
+              <div class="d-flex gap-1 align-items-start">
+                <a href="{{ url_for('company_reports', visit=s.visit_request_id) }}#reportForm" class="btn btn-sm sb-btn-primary"><i class="bi bi-pencil-square"></i> Record results</a>
+                <form method="POST" action="{{ url_for('update_interview_status', sid=s.id) }}"><input type="hidden" name="status" value="completed"><button class="btn btn-sm sb-btn-outline" title="Mark completed"><i class="bi bi-check2"></i></button></form>
+                <form method="POST" action="{{ url_for('update_interview_status', sid=s.id) }}" onsubmit="return confirm('Cancel this round?');"><input type="hidden" name="status" value="cancelled"><button class="btn btn-sm btn-outline-danger" title="Cancel"><i class="bi bi-x"></i></button></form>
+              </div>
+            </div>
+            <div class="small mt-2">
+              {% if s.start_time %}<span class="sb-chip"><i class="bi bi-clock"></i> {{ s.start_time }}{% if s.end_time %}–{{ s.end_time }}{% endif %}</span>{% endif %}
+              {% if s.venue %}<span class="sb-chip"><i class="bi bi-geo-alt"></i> {{ s.venue }}</span>{% endif %}
+              {% if s.meeting_link %}<a class="sb-chip" href="{{ s.meeting_link }}" target="_blank" rel="noopener"><i class="bi bi-camera-video"></i> Join link</a>{% endif %}
+              {% if s.panel %}<span class="sb-chip"><i class="bi bi-people"></i> {{ s.panel }}</span>{% endif %}
+              <form method="POST" action="{{ url_for('assign_interviewer', sid=s.id) }}" class="d-inline-flex align-items-center gap-1 mt-1">
+                <i class="bi bi-person-badge" style="color:#0f7c8c"></i>
+                <select name="interviewer_id" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()" aria-label="Assigned interviewer">
+                  <option value="">No interviewer assigned</option>
+                  {% for i in interviewers %}<option value="{{ i.id }}" {{ 'selected' if i.id == s.interviewer_id }}>{{ i.name }}</option>{% endfor %}
+                </select>
+              </form>
+              <span class="sb-chip"><i class="bi bi-clipboard-data"></i> {{ s.report_count }} result{{ 's' if s.report_count != 1 }} recorded</span>
+            </div>
+            {% if s.notes %}<div class="small text-muted mt-1">{{ s.notes }}</div>{% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-calendar2-week"></i>No upcoming rounds.</div>
+      {% endfor %}
+    </div>
+
+    <div class="sb-card">
+      <h5 class="mb-3">Past &amp; closed</h5>
+      {% for s in past %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom flex-wrap gap-2" style="border-color:var(--sb-border)!important;">
+          <div><strong class="small">{{ s.round_name }}</strong> · <small class="text-muted">{{ s.college_name }} · {{ s.interview_date | fmt_date }}</small></div>
+          <div class="d-flex gap-2 align-items-center">
+            <span class="sb-status s-{{ s.status }}">{{ s.status }}</span>
+            <a href="{{ url_for('company_reports', visit=s.visit_request_id) }}" class="small">{{ s.report_count }} result{{ 's' if s.report_count != 1 }}</a>
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted small mb-0">Nothing here yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% block title %}Mock Interview — UniLinkUp{% endblock %}
+{% block content %}
+<div class="sb-mic-hero" data-scroll="up">
+  <div class="sb-mic-wave" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+  <div class="small text-uppercase" style="letter-spacing:2px;opacity:.8;">Mock Interview</div>
+  <h3 class="mb-1">Practise with real industry interviewers</h3>
+  <p>Book a free slot, get interviewed the way companies do it, and get written feedback afterwards.<br>
+     Interviewers see a blind profile: your name, skills and projects, not your college or CGPA.</p>
+</div>
+
+<div class="row g-3 mt-2">
+  <div class="col-6 col-lg-3">
+    <div class="sb-kpi k-blue" data-scroll="up"><div class="icon"><i class="bi bi-calendar-check-fill"></i></div>
+      <div class="label">Upcoming</div><div class="value" data-count="{{ upcoming|length }}">0</div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="sb-kpi k-green" data-scroll="up" style="--d:.07s"><div class="icon"><i class="bi bi-check2-all"></i></div>
+      <div class="label">Completed</div><div class="value" data-count="{{ completed }}">0</div></div>
+  </div>
+  <div class="col-lg-6">
+    <div class="sb-kpi" data-scroll="up" style="--d:.14s">
+      <div class="label mb-2">Your average ratings</div>
+      {% if completed %}
+        {% for lbl, k in [('Technical','technical'), ('Communication','communication'), ('Problem solving','problem_solving'), ('Confidence','confidence')] %}
+          <div class="sb-rating-row"><span>{{ lbl }}</span><div class="sb-meter" style="--w:{{ ((avg[k] or 0) * 20)|round }}%"><span></span></div><strong>{{ avg[k] or '—' }}</strong></div>
+        {% endfor %}
+      {% else %}
+        <p class="small text-muted mb-0">Your ratings appear here after your first mock interview.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-7">
+    {% if upcoming %}
+    <div class="sb-card mb-4">
+      <h5 class="mb-3">My upcoming mock interviews</h5>
+      {% for m in upcoming %}
+        <div class="sb-slot">
+          <div class="sb-date-tile"><div class="d">{{ m.slot_date | fmt_date('%d') }}</div><div class="m">{{ m.slot_date | fmt_date('%b') }}</div></div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between gap-2 flex-wrap">
+              <div><strong>{{ m.start_time }}{% if m.end_time %}–{{ m.end_time }}{% endif %}</strong> <span class="sb-focus f-{{ m.focus|lower }}">{{ m.focus }}</span><br>
+                <small class="text-muted">with {{ m.interviewer_name }}{% if m.designation %}, {{ m.designation }}{% endif %} · {{ m.company_name }}</small></div>
+              <div class="d-flex gap-1 align-items-start">
+                {% if m.meeting_link %}<a href="{{ m.meeting_link }}" target="_blank" rel="noopener" class="btn btn-sm sb-btn-primary"><i class="bi bi-camera-video-fill"></i> Join</a>{% endif %}
+                <form method="POST" action="{{ url_for('cancel_mock', slot_id=m.id) }}" onsubmit="return confirm('Cancel this booking?');"><button class="btn btn-sm btn-outline-danger rounded-pill">Cancel</button></form>
+              </div>
+            </div>
+            <div class="small mt-1 text-muted">Preparing for <strong>{{ m.target_role }}</strong>{% if m.student_topics %} · {{ m.student_topics }}{% endif %}{% if m.venue %} · {{ m.venue }}{% endif %}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="sb-card">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h5 class="mb-0">Book a slot</h5>
+        <div class="d-flex gap-1 flex-wrap">
+          <a href="{{ url_for('mock_interview') }}" class="btn btn-sm {{ 'sb-btn-primary' if not focus else 'sb-btn-outline' }}">All</a>
+          {% for f in focus_options %}<a href="{{ url_for('mock_interview', focus=f) }}" class="btn btn-sm {{ 'sb-btn-primary' if focus == f else 'sb-btn-outline' }}">{{ f }}</a>{% endfor %}
+        </div>
+      </div>
+      {% if not can_book %}
+        <div class="alert alert-warning small"><i class="bi bi-info-circle"></i> You already have {{ max_upcoming }} upcoming mock interviews. Finish or cancel one to book another.</div>
+      {% endif %}
+      {% for m in open_slots %}
+        <div class="sb-slot" data-scroll="up" style="--d:{{ [loop.index0, 6]|min * 0.04 }}s">
+          <div class="sb-date-tile"><div class="d">{{ m.slot_date | fmt_date('%d') }}</div><div class="m">{{ m.slot_date | fmt_date('%b') }}</div></div>
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between gap-2 flex-wrap">
+              <div><strong>{{ m.slot_date | fmt_date('%A') }}, {{ m.start_time }}{% if m.end_time %}–{{ m.end_time }}{% endif %}</strong> <span class="sb-focus f-{{ m.focus|lower }}">{{ m.focus }}</span><br>
+                <small class="text-muted">{{ m.interviewer_name }}{% if m.designation %}, {{ m.designation }}{% endif %} · <strong>{{ m.company_name }}</strong> · {{ m.mode }}</small></div>
+              <button class="btn btn-sm sb-btn-primary align-self-start" data-bs-toggle="modal" data-bs-target="#bookModal" {{ 'disabled' if not can_book }}
+                      data-slot="{{ m.id }}" data-when="{{ m.slot_date | fmt_date('%a %d %b') }} · {{ m.start_time }}" data-who="{{ m.interviewer_name }} ({{ m.company_name }})" data-focus="{{ m.focus }}">
+                <i class="bi bi-calendar-plus"></i> Book
+              </button>
+            </div>
+            {% if m.topics %}<div class="small mt-1"><i class="bi bi-list-check text-muted"></i> {{ m.topics }}</div>{% endif %}
+          </div>
+        </div>
+      {% else %}
+        <div class="sb-empty"><i class="bi bi-mic-mute"></i>No open slots{% if focus %} for {{ focus }}{% endif %} right now. Check back soon — interviewers add new slots every week.</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="sb-card mb-4">
+      <h5 class="mb-1">What the interviewer sees</h5>
+      <p class="small text-muted">To keep things fair, interviewers only see this. Add skills and projects in <a href="{{ url_for('profile') }}">My Profile</a> and the <a href="{{ url_for('resume_builder') }}">Resume Builder</a> to make it stronger.</p>
+      {% with p=preview %}{% include '_blind_profile.html' %}{% endwith %}
+    </div>
+
+    <div class="sb-card">
+      <h5 class="mb-3">Feedback &amp; history</h5>
+      {% for m in past %}
+        <div class="sb-item">
+          <div class="d-flex justify-content-between gap-2 flex-wrap">
+            <div><strong class="small">{{ m.slot_date | fmt_date }}</strong> <span class="sb-focus f-{{ m.focus|lower }}">{{ m.focus }}</span><br>
+              <small class="text-muted">{{ m.interviewer_name }} · {{ m.company_name }}</small></div>
+            <span class="sb-status s-{{ m.status }}">{{ m.status }}</span>
+          </div>
+          {% if m.fb_id %}
+            {% set vcls = 'v-ready' if m.verdict.startswith('Ready') else ('v-almost' if m.verdict.startswith('Almost') else 'v-practice') %}
+            <div class="sb-verdict {{ vcls }} mt-2"><i class="bi bi-flag-fill"></i> {{ m.verdict }}</div>
+            <div class="mt-2">
+              {% for lbl, v in [('Technical', m.technical), ('Communication', m.communication), ('Problem solving', m.problem_solving), ('Confidence', m.confidence)] if v %}
+                <span class="sb-chip">{{ lbl }} <strong>{{ v }}/5</strong></span>
+              {% endfor %}
+            </div>
+            {% if m.strengths %}<div class="small mt-2"><strong class="text-success">Went well:</strong> {{ m.strengths }}</div>{% endif %}
+            <div class="small mt-1"><strong class="text-warning">Improve:</strong> {{ m.improvements }}</div>
+            {% if m.resources %}<div class="small mt-1"><strong>Practise next:</strong> {{ m.resources }}</div>{% endif %}
+          {% elif m.status == 'cancelled' %}
+            <div class="small mt-2 text-muted">Cancelled by the interviewer{% if m.cancel_reason %}: {{ m.cancel_reason }}{% endif %}</div>
+          {% elif m.status == 'no-show' %}
+            <div class="small mt-2 text-muted">Marked as not attended.</div>
+          {% endif %}
+        </div>
+      {% else %}
+        <div class="sb-empty py-3"><i class="bi bi-chat-square-text"></i>Feedback from your mock interviews will appear here.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="bookModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="POST" id="bookForm" style="border-radius:20px;">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Book mock interview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <p class="small text-muted mb-3"><span id="bkWhen"></span> · <span id="bkFocus"></span> with <span id="bkWho"></span></p>
+        <div class="mb-2"><label class="form-label small">Role you're preparing for <span class="text-danger">*</span></label>
+          <input name="target_role" class="form-control" required placeholder="e.g. Software Engineer, Data Analyst"></div>
+        <div class="mb-2"><label class="form-label small">Topics you want to be asked</label>
+          <input name="student_topics" class="form-control" placeholder="e.g. Arrays, SQL, tell me about yourself"></div>
+        <div class="mb-2"><label class="form-label small">Anything else for the interviewer?</label>
+          <textarea name="student_note" rows="2" class="form-control" placeholder="Optional — don't include your college or CGPA"></textarea></div>
+      </div>
+      <div class="modal-footer border-0">
+        <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn sb-btn-primary"><i class="bi bi-check2"></i> Confirm booking</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(function () {
+  var m = document.getElementById('bookModal');
+  m.addEventListener('show.bs.modal', function (e) {
+    var b = e.relatedTarget;
+    document.getElementById('bookForm').action = '/mock-interview/' + b.dataset.slot + '/book';
+    document.getElementById('bkWhen').textContent = b.dataset.when;
+    document.getElementById('bkWho').textContent = b.dataset.who;
+    document.getElementById('bkFocus').textContent = b.dataset.focus;
+  });
+})();
+</script>
+{% endblock %}
